@@ -1,0 +1,111 @@
+<div class="app-wrapper">
+    <!-- Левая панель -->
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-logo">
+                <div class="logo-symbol"></div>
+                <span class="brand-name">Цифра AI</span>
+            </div>
+            <div class="brand-tagline">Промышленный интеллект</div>
+        </div>
+        
+        <div class="action-buttons">
+            <button class="btn-new-chat" (click)="createNewChat()">Новый диалог</button>
+        </div>
+        
+        <div class="history-section">
+            <div class="history-title">История</div>
+            <div class="history-item active">Цифровизация производства</div>
+            <div class="history-item">Анализ данных IoT</div>
+            <div class="history-item">Роботизация процессов</div>
+            <div class="history-item">Прогнозная модель</div>
+            <div class="history-item">Оптимизация ресурсов</div>
+            <div class="history-item">Промышленная безопасность</div>
+            <div class="history-item">Интеграция систем</div>
+        </div>
+    </aside>
+
+    <!-- Правая область -->
+    <main class="chat-area">
+        <header class="top-bar">
+            <h1 class="chat-title">Ассистент <span>Цифры</span></h1>
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span>Онлайн</span>
+            </div>
+        </header>
+
+        <div class="messages-area" id="chatMessages">
+            <!-- Приветственный экран -->
+            <div class="welcome-container" id="welcomeView" *ngIf="showWelcome">
+                <div class="welcome-graphic"></div>
+                <h2 class="welcome-heading">Добро пожаловать в <span class="highlight">Цифра AI</span></h2>
+                <p class="welcome-description">
+                    Интеллектуальный ассистент для индустриального сектора. 
+                    Помогаю с цифровизацией производства, анализом данных и автоматизацией процессов.
+                </p>
+                <div class="prompts-grid">
+                    <div class="prompt-card" (click)="useSamplePrompt('Как повысить эффективность производства с помощью IoT?')">
+                        <div class="prompt-icon">📊</div>
+                        <div class="prompt-label">Эффективность</div>
+                        <div class="prompt-description">Как повысить эффективность производства с помощью IoT?</div>
+                    </div>
+                    <div class="prompt-card" (click)="useSamplePrompt('Расскажи о платформе ZIIoT для нефтегаза')">
+                        <div class="prompt-icon">⚙️</div>
+                        <div class="prompt-label">Платформа ZIIoT</div>
+                        <div class="prompt-description">Расскажи о платформе ZIIoT для нефтегаза</div>
+                    </div>
+                    <div class="prompt-card" (click)="useSamplePrompt('Какие решения для горной промышленности?')">
+                        <div class="prompt-icon">⛏️</div>
+                        <div class="prompt-label">Горная отрасль</div>
+                        <div class="prompt-description">Какие решения для горной промышленности?</div>
+                    </div>
+                    <div class="prompt-card" (click)="useSamplePrompt('Как внедрить роботизацию на предприятии?')">
+                        <div class="prompt-icon">🤖</div>
+                        <div class="prompt-label">Роботизация</div>
+                        <div class="prompt-description">Как внедрить роботизацию на предприятии?</div>
+                    </div>
+                    <div class="prompt-card" (click)="useSamplePrompt('Какие преимущества предиктивной аналитики?')">
+                        <div class="prompt-icon">🔮</div>
+                        <div class="prompt-label">Предиктивная аналитика</div>
+                        <div class="prompt-description">Какие преимущества предиктивной аналитики?</div>
+                    </div>
+                    <div class="prompt-card" (click)="useSamplePrompt('Как обеспечить кибербезопасность на производстве?')">
+                        <div class="prompt-icon">🔒</div>
+                        <div class="prompt-label">Кибербезопасность</div>
+                        <div class="prompt-description">Как обеспечить кибербезопасность на производстве?</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Сообщения чата -->
+            <div class="chat-message" [class.user]="message.sender === 'user'" [class.assistant]="message.sender === 'assistant'" *ngFor="let message of chatHistory">
+                <div class="message-icon">{{ getMessageIcon(message.sender) }}</div>
+                <div class="message-body">
+                    <div class="message-bubble">{{ message.text }}</div>
+                    <div class="message-meta">
+                        <span>{{ message.timestamp }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="input-container">
+            <div class="input-box-wrapper">
+                <textarea 
+                    class="text-input" 
+                    id="userInput" 
+                    placeholder="Задайте вопрос о цифровизации промышленности..."
+                    rows="1"
+                    [(ngModel)]="userInput"
+                    (keydown)="checkEnter($event)"
+                    (input)="adjustHeight($event)"></textarea>
+                <button class="btn-send" (click)="submitMessage()">
+                    <svg class="send-svg" viewBox="0 0 24 24">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                </button>
+            </div>
+        </footer>
+    </main>
+</div>
