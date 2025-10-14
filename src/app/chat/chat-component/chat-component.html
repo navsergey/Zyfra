@@ -1,30 +1,6 @@
 <div class="app-wrapper">
     <!-- Левая панель -->
-    <aside class="sidebar">
-        <div class="brand">
-            <div class="brand-logo">
-                <div class="logo-symbol"></div>
-                <span class="brand-name">Цифра AI</span>
-            </div>
-            <div class="brand-tagline">Промышленный интеллект</div>
-        </div>
-        
-        <div class="action-buttons">
-            <button class="btn-new-chat" (click)="createNewChat()">Новый диалог</button>
-        </div>
-        
-        <div class="history-section">
-            <div class="history-title">История</div>
-            <div class="history-item active">Цифровизация производства</div>
-            <div class="history-item">Анализ данных IoT</div>
-            <div class="history-item">Роботизация процессов</div>
-            <div class="history-item">Прогнозная модель</div>
-            <div class="history-item">Оптимизация ресурсов</div>
-            <div class="history-item">Промышленная безопасность</div>
-            <div class="history-item">Интеграция систем</div>
-        </div>
-    </aside>
-
+    <app-sidebar-component></app-sidebar-component>
     <!-- Правая область -->
     <main class="chat-area">
         <header class="top-bar">
@@ -41,7 +17,7 @@
                 <div class="welcome-graphic"></div>
                 <h2 class="welcome-heading">Добро пожаловать в <span class="highlight">Цифра AI</span></h2>
                 <p class="welcome-description">
-                    Интеллектуальный ассистент для индустриального сектора. 
+                    Интеллектуальный ассистент для индустриального сектора.
                     Помогаю с цифровизацией производства, анализом данных и автоматизацией процессов.
                 </p>
                 <div class="prompts-grid">
@@ -92,9 +68,9 @@
 
         <footer class="input-container">
             <div class="input-box-wrapper">
-                <textarea 
-                    class="text-input" 
-                    id="userInput" 
+                <textarea
+                    class="text-input"
+                    id="userInput"
                     placeholder="Задайте вопрос о цифровизации промышленности..."
                     rows="1"
                     [(ngModel)]="userInput"

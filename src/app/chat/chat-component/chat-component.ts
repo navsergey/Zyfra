@@ -1,16 +1,12 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-interface ChatMessage {
-  sender: 'user' | 'assistant';
-  text: string;
-  timestamp: string;
-}
+import {ChatMessage} from '../interface/interface';
+import {SidebarComponent} from '../sidebar-component/sidebar-component';
 
 @Component({
   selector: 'app-chat-component',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SidebarComponent],
   templateUrl: './chat-component.html',
   styleUrl: './chat-component.scss'
 })
@@ -53,7 +49,7 @@ export class ChatComponent {
 
   submitMessage(): void {
     const messageText = this.userInput.trim();
-    
+
     if (!messageText) return;
 
     if (this.showWelcome) {
@@ -81,7 +77,7 @@ export class ChatComponent {
   appendMessage(sender: 'user' | 'assistant', text: string): void {
     const timestamp = this.getTimestamp();
     this.chatHistory.push({ sender, text, timestamp });
-    
+
     // Автоматическая прокрутка вниз
     setTimeout(() => {
       const container = document.getElementById('chatMessages');
@@ -91,11 +87,6 @@ export class ChatComponent {
     }, 100);
   }
 
-  createNewChat(): void {
-    this.chatHistory = [];
-    this.showWelcome = true;
-    this.userInput = '';
-  }
 
   getMessageIcon(sender: 'user' | 'assistant'): string {
     return sender === 'user' ? 'Вы' : 'AI';
