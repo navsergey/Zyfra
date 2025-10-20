@@ -11,28 +11,28 @@
             </div>
 
             <!-- Форма авторизации -->
-            <form class="auth-form" (ngSubmit)="onSubmit()">
+            <form class="auth-form" [formGroup]="form" (ngSubmit)="onSubmit()">
                 <!-- Поле имени -->
-                <div class="form-group">
-                    <label for="username" class="form-label">Имя пользователя</label>
-                    <div class="input-wrapper">
-                        <div class="input-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                <circle cx="12" cy="7" r="4"></circle>
-                            </svg>
-                        </div>
-                        <input
-                            type="text"
-                            id="username"
-                            class="form-input"
-                            placeholder="Введите ваше имя"
-                            [(ngModel)]="username"
-                            name="username"
-                            required
-                            autocomplete="username">
-                    </div>
-                </div>
+<!--                <div class="form-group">-->
+<!--                    <label for="username" class="form-label">Имя пользователя</label>-->
+<!--                    <div class="input-wrapper">-->
+<!--                        <div class="input-icon">-->
+<!--                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">-->
+<!--                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>-->
+<!--                                <circle cx="12" cy="7" r="4"></circle>-->
+<!--                            </svg>-->
+<!--                        </div>-->
+<!--                        <input-->
+<!--                            type="text"-->
+<!--                            id="username"-->
+<!--                            class="form-input"-->
+<!--                            placeholder="Введите ваше имя"-->
+<!--                            formControlName="username"-->
+<!--                            name="username"-->
+<!--                            required-->
+<!--                            autocomplete="username">-->
+<!--                    </div>-->
+<!--                </div>-->
 
                 <!-- Поле пароля -->
                 <div class="form-group">
@@ -49,10 +49,10 @@
                             id="password"
                             class="form-input"
                             placeholder="Введите пароль"
-                            [(ngModel)]="password"
-                            name="password"
+                            formControlName="access_code"
+                            name="access_code"
                             required
-                            autocomplete="current-password">
+                            autocomplete="access_code">
                         <button
                             type="button"
                             class="toggle-password"
@@ -71,7 +71,7 @@
                 </div>
 
                 <!-- Кнопка входа -->
-                <button type="submit" class="btn-submit" [disabled]="!username || !password">
+                <button type="submit" class="btn-submit" [disabled]="form.invalid">
                     Войти
                 </button>
             </form>

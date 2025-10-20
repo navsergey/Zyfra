@@ -3,3 +3,13 @@ export interface ChatMessage {
   text: string;
   timestamp: string;
 }
+
+export interface Context {
+  "context_id": string;
+  "title": string;
+  "created_at": string;
+  "last_activity": string;
+  "turn_count": number;
+  "is_active": boolean
+}
+

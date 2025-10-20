@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import {ChatMessage} from '../interface/interface';
+import {ChatMessage, Context} from '../interface/interface';
 import {SidebarComponent} from '../sidebar-component/sidebar-component';
+import {ChatService} from '../../services/chat-service';
 
 @Component({
   selector: 'app-chat-component',
@@ -11,9 +12,22 @@ import {SidebarComponent} from '../sidebar-component/sidebar-component';
   styleUrl: './chat-component.scss'
 })
 export class ChatComponent {
+  chatService = inject(ChatService);
   chatHistory: ChatMessage[] = [];
   userInput: string = '';
   showWelcome: boolean = true;
+  contexts: Context[] = [];
+
+  constructor() {
+    this.loadContexts();
+  }
+
+  private loadContexts(): void {
+    this.chatService.getContexts().subscribe( val => {
+        this.contexts = val;
+        console.log(this.contexts);
+    });
+  }
 
   private aiResponses: string[] = [
     'Для повышения эффективности производства рекомендую внедрить платформу ZIIoT. Она обеспечивает сбор данных с оборудования в режиме реального времени, что позволяет оперативно принимать решения и снижать простои на 25-30%.',

@@ -5,7 +5,7 @@ import {AuthPageComponent} from './authpage/auth-page-component/auth-page-compon
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, ChatComponent, AuthPageComponent],
+  imports: [RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
