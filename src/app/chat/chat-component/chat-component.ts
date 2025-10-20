@@ -25,6 +25,7 @@ export class ChatComponent {
   private loadContexts(): void {
     this.chatService.getContexts().subscribe( val => {
         this.contexts = val;
+        console.log(this.contexts);
     });
   }
 
