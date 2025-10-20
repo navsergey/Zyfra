@@ -1,7 +1,7 @@
 <div class="app-wrapper">
     <!-- Левая панель -->
-    <app-sidebar-component 
-      [contexts]="contexts" 
+    <app-sidebar-component
+      [contexts]="contexts"
       [selectedContextId]="selectedContextId"
       (contextSelected)="onContextSelected($event)">
     </app-sidebar-component>
@@ -45,16 +45,6 @@
                         <div class="prompt-label">Роботизация</div>
                         <div class="prompt-description">Как внедрить роботизацию на предприятии?</div>
                     </div>
-                    <div class="prompt-card" (click)="useSamplePrompt('Какие преимущества предиктивной аналитики?')">
-                        <div class="prompt-icon">🔮</div>
-                        <div class="prompt-label">Предиктивная аналитика</div>
-                        <div class="prompt-description">Какие преимущества предиктивной аналитики?</div>
-                    </div>
-                    <div class="prompt-card" (click)="useSamplePrompt('Как обеспечить кибербезопасность на производстве?')">
-                        <div class="prompt-icon">🔒</div>
-                        <div class="prompt-label">Кибербезопасность</div>
-                        <div class="prompt-description">Как обеспечить кибербезопасность на производстве?</div>
-                    </div>
                 </div>
             </div>
 
@@ -67,7 +57,7 @@
             </div>
         </div>
 
-        <footer class="input-container">
+        <footer class="input-container" *ngIf="!showWelcome">
             <div class="input-box-wrapper">
                 <textarea
                     class="text-input"

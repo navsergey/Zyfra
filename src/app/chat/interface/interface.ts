@@ -41,4 +41,5 @@ export interface AddProp{
   q: string;
   a: string;
   sources: Source[];
+  ts: number;
 }
