@@ -1,4 +1,4 @@
-import {Component, Input} from '@angular/core';
+import {Component, Input, Output, EventEmitter} from '@angular/core';
 import {ChatMessage, Context} from '../interface/interface';
 
 @Component({
@@ -11,15 +11,16 @@ import {ChatMessage, Context} from '../interface/interface';
 export class SidebarComponent {
 
   @Input() contexts!: Context[]; // В компонент передаются данные и далее формируется шаблон HTML
+  @Input() selectedContextId: string = ''; // ID выбранного контекста
+  @Output() contextSelected = new EventEmitter<string>(); // Событие выбора контекста
 
-  chatHistory: ChatMessage[] = [];
-  userInput: string = '';
-  showWelcome: boolean = true;
 
   createNewChat(): void {
-    this.chatHistory = [];
-    this.showWelcome = true;
-    this.userInput = '';
+    this.contextSelected.emit(''); // Сбрасываем выбранный контекст
+  }
+
+  selectContext(context: Context): void {
+    this.contextSelected.emit(context.context_id);
   }
 
 }

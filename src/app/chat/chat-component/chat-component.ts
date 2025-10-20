@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import {ChatMessage, Context} from '../interface/interface';
+import {ChatMessage, Context, TurnResponse, AddProp} from '../interface/interface';
 import {SidebarComponent} from '../sidebar-component/sidebar-component';
 import {ChatService} from '../../services/chat-service';
 
@@ -17,6 +17,8 @@ export class ChatComponent {
   userInput: string = '';
   showWelcome: boolean = true;
   contexts: Context[] = [];
+  selectedContextId: string = '';
+  currentDialog: TurnResponse | null = null;
 
   constructor() {
     this.loadContexts();
@@ -25,6 +27,52 @@ export class ChatComponent {
   private loadContexts(): void {
     this.chatService.getContexts().subscribe( val => {
         this.contexts = val;
+    });
+  }
+
+  onContextSelected(contextId: string): void {
+    this.selectedContextId = contextId;
+
+    if (contextId) {
+      this.loadDialog(contextId);
+    } else {
+      // Сброс к новому диалогу
+      this.chatHistory = [];
+      this.showWelcome = true;
+      this.currentDialog = null;
+    }
+  }
+
+  private loadDialog(contextId: string): void {
+    this.chatService.getTurn(contextId).subscribe(response => {
+      this.currentDialog = response;
+      this.showWelcome = false;
+
+      // Преобразуем turns в chatHistory
+      this.chatHistory = [];
+      if (response.turns && response.turns.length > 0) {
+        response.turns.forEach(turn => {
+          // Добавляем вопрос пользователя
+          this.chatHistory.push({
+            sender: 'user',
+            text: turn.q,
+          });
+
+          // Добавляем ответ ассистента
+          this.chatHistory.push({
+            sender: 'assistant',
+            text: turn.a,
+          });
+        });
+      }
+
+      // Прокручиваем к последнему сообщению
+      setTimeout(() => {
+        const container = document.getElementById('chatMessages');
+        if (container) {
+          container.scrollTop = container.scrollHeight;
+        }
+      }, 100);
     });
   }
 
@@ -48,11 +96,6 @@ export class ChatComponent {
       event.preventDefault();
       this.submitMessage();
     }
-  }
-
-  getTimestamp(): string {
-    const date = new Date();
-    return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
   }
 
   useSamplePrompt(promptText: string): void {
@@ -80,16 +123,19 @@ export class ChatComponent {
       }
     }, 0);
 
-    // Имитация ответа AI
-    setTimeout(() => {
-      const randomReply = this.aiResponses[Math.floor(Math.random() * this.aiResponses.length)];
-      this.appendMessage('assistant', randomReply);
-    }, 1200);
+    // Если выбран контекст, не добавляем новые сообщения к истории диалога
+    // В реальном приложении здесь был бы API вызов для отправки сообщения
+    if (!this.selectedContextId) {
+      // Имитация ответа AI только для нового диалога
+      setTimeout(() => {
+        const randomReply = this.aiResponses[Math.floor(Math.random() * this.aiResponses.length)];
+        this.appendMessage('assistant', randomReply);
+      }, 1200);
+    }
   }
 
   appendMessage(sender: 'user' | 'assistant', text: string): void {
-    const timestamp = this.getTimestamp();
-    this.chatHistory.push({ sender, text, timestamp });
+    this.chatHistory.push({ sender, text });
 
     // Автоматическая прокрутка вниз
     setTimeout(() => {

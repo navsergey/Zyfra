@@ -26,7 +26,11 @@
     <div class="history-section">
       <div class="history-title">История</div>
         @for (context of contexts; track context.context_id){
-          <div class="history-item" [class.active]="context.is_active">{{ context.title }}</div>
+          <div class="history-item" 
+               [class.active]="context.context_id === selectedContextId" 
+               (click)="selectContext(context)">
+            {{ context.title }}
+          </div>
         }
     </div>
   }

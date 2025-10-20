@@ -1,6 +1,6 @@
 import {inject, Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
-import {Context, ContextsResponse} from '../chat/interface/interface';
+import {Context, ContextsResponse, TurnResponse} from '../chat/interface/interface';
 import {Observable, catchError, of, map} from 'rxjs';
 import {AuthService} from '../authpage/auth/auth';
 
@@ -46,6 +46,34 @@ export class ChatService {
         }
 
         return of([]); // Возвращаем пустой массив в случае ошибки
+      })
+    );
+  }
+
+  getTurn(contextId:string): Observable<TurnResponse> {
+    const headers = this.getAuthHeaders();
+
+    return this.http.get<TurnResponse>(`${this.baseApiUrl}contexts/${contextId}`, { headers }).pipe(
+      catchError(error => {
+        console.error('Ошибка при получении контекста:', error);
+        console.error('Статус ошибки:', error.status);
+        console.error('Сообщение ошибки:', error.message);
+
+        // Если 403, возможно проблема с авторизацией
+        if (error.status === 403) {
+          console.error('403 Forbidden - проверьте токен авторизации');
+        }
+
+        // Возвращаем пустой объект TurnResponse в случае ошибки
+        return of({
+          context_id: '',
+          title: '',
+          created_at: '',
+          last_activity: '',
+          turn_count: 0,
+          is_active: false,
+          turns: []
+        });
       })
     );
   }
