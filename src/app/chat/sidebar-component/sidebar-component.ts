@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { ChatMessage } from '../interface/interface';
+import {Component, Input} from '@angular/core';
+import {ChatMessage, Context} from '../interface/interface';
 
 @Component({
   selector: 'app-sidebar-component',
@@ -9,6 +9,8 @@ import { ChatMessage } from '../interface/interface';
 })
 
 export class SidebarComponent {
+
+  @Input() contexts!: Context[]; // В компонент передаются данные и далее формируется шаблон HTML
 
   chatHistory: ChatMessage[] = [];
   userInput: string = '';
