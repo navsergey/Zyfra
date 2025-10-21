@@ -1,8 +1,9 @@
 import {inject, Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
-import {Context, ContextsResponse, TurnResponse} from '../chat/interface/interface';
-import {Observable, catchError, of, map} from 'rxjs';
+import {Context, ContextsResponse, SwitchContext, TurnResponse} from '../chat/interface/interface';
+import {Observable, catchError, of, map, tap} from 'rxjs';
 import {AuthService} from '../authpage/auth/auth';
+import {TokenResponse} from '../authpage/auth/auth.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -50,6 +51,33 @@ export class ChatService {
     );
   }
 
+  switchContexts(contextId:string): Observable<SwitchContext> {
+    const headers = this.getAuthHeaders();
+
+    return this.http.post<SwitchContext>(`${this.baseApiUrl}contexts/${contextId}/activate`, {context_id: contextId}, { headers }).pipe(
+      catchError(error => {
+        console.error('Ошибка при переключении контекста:', error);
+        console.error('Статус ошибки:', error.status);
+        console.error('Сообщение ошибки:', error.message);
+
+        // Если 403, возможно проблема с авторизацией
+        if (error.status === 403) {
+          console.error('403 Forbidden - проверьте токен авторизации');
+        }
+
+        // Возвращаем пустой объект SwitchContext в случае ошибки
+        return of({
+          context_id: '',
+          title: '',
+          created_at: '',
+          last_activity: '',
+          turn_count: 0,
+          is_active: false
+        });
+      })
+    );
+  }
+
   getTurn(contextId:string): Observable<TurnResponse> {
     const headers = this.getAuthHeaders();
 
@@ -77,4 +105,9 @@ export class ChatService {
       })
     );
   }
+
+
+
+
+
 }

@@ -31,6 +31,8 @@ export class ChatComponent {
   }
 
   onContextSelected(contextId: string): void {
+    this.chatService.switchContexts(contextId).subscribe()
+
     this.selectedContextId = contextId;
 
     if (contextId) {

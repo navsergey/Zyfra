@@ -44,3 +44,7 @@ export interface AddProp{
   sources: Source[];
   ts: number;
 }
+
+export interface SwitchContext{
+  context_id: string;
+}
