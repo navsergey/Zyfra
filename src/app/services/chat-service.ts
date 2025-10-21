@@ -1,6 +1,6 @@
 import {inject, Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
-import {Context, ContextsResponse, SwitchContext, TurnResponse} from '../chat/interface/interface';
+import {Context, ContextsResponse, QueryRequest, QueryResponse, SwitchContext, TurnResponse} from '../chat/interface/interface';
 import {Observable, catchError, of, map, tap} from 'rxjs';
 import {AuthService} from '../authpage/auth/auth';
 import {TokenResponse} from '../authpage/auth/auth.interface';
@@ -66,13 +66,36 @@ export class ChatService {
         }
 
         // Возвращаем пустой объект SwitchContext в случае ошибки
+        return of();
+      })
+    );
+  }
+
+  QuestContext(question: string, contextId: string): Observable<QueryResponse> {
+    const headers = this.getAuthHeaders();
+
+    // Создаем объект запроса с правильным интерфейсом
+    const request: QueryRequest = {
+      context_id: contextId,
+      question: question
+    };
+
+    return this.http.post<QueryResponse>(`${this.baseApiUrl}query`, request, { headers }).pipe(
+      catchError(error => {
+        console.error('Ошибка при отправке вопроса:', error);
+        console.error('Статус ошибки:', error.status);
+        console.error('Сообщение ошибки:', error.message);
+
+        // Если 403, возможно проблема с авторизацией
+        if (error.status === 403) {
+          console.error('403 Forbidden - проверьте токен авторизации');
+        }
+
+        // Возвращаем объект QueryResponse с сообщением об ошибке
         return of({
-          context_id: '',
-          title: '',
-          created_at: '',
-          last_activity: '',
-          turn_count: 0,
-          is_active: false
+          answer: 'Извините, произошла ошибка при обработке вашего вопроса.',
+          context_id: contextId,
+          sources: []
         });
       })
     );

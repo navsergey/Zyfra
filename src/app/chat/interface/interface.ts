@@ -1,7 +1,7 @@
 export interface ChatMessage {
   sender: 'user' | 'assistant';
   text: string;
-  ts:string;
+  ts:number;
 }
 
 export interface Context {
@@ -47,4 +47,15 @@ export interface AddProp{
 
 export interface SwitchContext{
   context_id: string;
+}
+
+export interface QueryRequest {
+  context_id: string;
+  question: string;
+}
+
+export interface QueryResponse {
+  answer: string;
+  context_id: string;
+  sources: Source[];
 }

@@ -1,19 +1,21 @@
-import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, signal } from '@angular/core';
+import { CommonModule, AsyncPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {ChatMessage, Context, TurnResponse} from '../interface/interface';
 import {SidebarComponent} from '../sidebar-component/sidebar-component';
 import {ChatService} from '../../services/chat-service';
+import {toObservable} from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-chat-component',
-  imports: [CommonModule, FormsModule, SidebarComponent],
+  imports: [CommonModule, FormsModule, SidebarComponent, AsyncPipe],
   templateUrl: './chat-component.html',
   styleUrl: './chat-component.scss'
 })
 export class ChatComponent {
   chatService = inject(ChatService);
-  chatHistory: ChatMessage[] = [];
+  chatHistory = signal<ChatMessage[]>([]);
+  chatHistory$ = toObservable(this.chatHistory);
   userInput: string = '';
   showWelcome: boolean = true;
   contexts: Context[] = [];
@@ -26,7 +28,7 @@ export class ChatComponent {
 
   private loadContexts(): void {
     this.chatService.getContexts().subscribe( val => {
-        this.contexts = val;
+      this.contexts = val;
     });
   }
 
@@ -39,7 +41,7 @@ export class ChatComponent {
       this.loadDialog(contextId);
     } else {
       // Сброс к новому диалогу
-      this.chatHistory = [];
+      this.chatHistory.set([]);
       this.showWelcome = true;
       this.currentDialog = null;
     }
@@ -51,24 +53,25 @@ export class ChatComponent {
       this.showWelcome = false;
 
       // Преобразуем turns в chatHistory
-      this.chatHistory = [];
+      const messages: ChatMessage[] = [];
       if (response.turns && response.turns.length > 0) {
         response.turns.forEach(turn => {
           // Добавляем вопрос пользователя
-          this.chatHistory.push({
+          messages.push({
             sender: 'user',
             text: turn.q,
-            ts: turn.ts.toString()
+            ts: turn.ts
           });
 
           // Добавляем ответ ассистента
-          this.chatHistory.push({
+          messages.push({
             sender: 'assistant',
             text: turn.a,
-            ts: turn.ts.toString()
+            ts: turn.ts
           });
         });
       }
+      this.chatHistory.set(messages);
 
       // Прокручиваем к последнему сообщению
       setTimeout(() => {
@@ -107,13 +110,13 @@ export class ChatComponent {
 
   submitMessage(): void {
     const messageText = this.userInput.trim();
-
     if (!messageText) return;
 
     if (this.showWelcome) {
       this.showWelcome = false;
     }
 
+    // Используйте строку для временной метки
     this.appendMessage('user', messageText, 0);
     this.userInput = '';
 
@@ -125,9 +128,24 @@ export class ChatComponent {
       }
     }, 0);
 
-    // Если выбран контекст, не добавляем новые сообщения к истории диалога
-    // В реальном приложении здесь был бы API вызов для отправки сообщения
-    if (!this.selectedContextId) {
+    if (this.selectedContextId) {
+      this.chatService.QuestContext(messageText, this.selectedContextId).subscribe({
+          next: (response) => {
+            console.log('Ответ получен:', response);
+            // Используем response.answer вместо response.question
+            if (response && response.answer) {
+              this.appendMessage('assistant', response.answer, Date.now());
+            } else {
+              console.error('Некорректный ответ от сервера:', response);
+              this.appendMessage('assistant', 'Получен некорректный ответ от сервера', Date.now());
+            }
+          },
+        error: (error) => {
+          console.error('Ошибка при отправке вопроса:', error);
+          this.appendMessage('assistant', 'Извините, произошла ошибка при обработке вашего вопроса.', Date.now());
+        }
+      });
+    } else {
       // Имитация ответа AI только для нового диалога
       setTimeout(() => {
         const randomReply = this.aiResponses[Math.floor(Math.random() * this.aiResponses.length)];
@@ -137,7 +155,8 @@ export class ChatComponent {
   }
 
   appendMessage(sender: 'user' | 'assistant', text: string, ts: number): void {
-    this.chatHistory.push({ sender, text, ts: ts.toString() });
+    // Обновляем signal с новым сообщением
+    this.chatHistory.update(messages => [...messages, { sender:sender, text:text, ts: ts }]);
 
     // Автоматическая прокрутка вниз
     setTimeout(() => {
@@ -153,14 +172,39 @@ export class ChatComponent {
     return sender === 'user' ? 'Вы' : 'AI';
   }
 
-  formatTimestamp(timestamp: string): string {
-    const date = new Date(parseInt(timestamp) * 1000); // Unix timestamp в миллисекундах
-    return date.toLocaleString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  formatTimestamp(timestamp: number): string {
+    try {
+      // Нормализуем timestamp
+      let normalizedTimestamp: number;
+
+      if (!timestamp || timestamp === 0) {
+        normalizedTimestamp = Date.now();
+      } else if (timestamp < 1000000000000) {
+        // Если timestamp в секундах (меньше 13 знаков)
+        normalizedTimestamp = timestamp * 1000;
+      } else {
+        // Если уже в миллисекундах
+        normalizedTimestamp = timestamp;
+      }
+
+      const date = new Date(normalizedTimestamp);
+
+      if (isNaN(date.getTime())) {
+        return 'Некорректная дата';
+      }
+
+      return date.toLocaleString('ru-RU', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit' // Добавим секунды для отладки
+      });
+
+    } catch (error) {
+      console.error('Ошибка форматирования timestamp:', timestamp, error);
+      return 'Ошибка даты';
+    }
   }
 }
