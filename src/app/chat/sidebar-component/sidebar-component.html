@@ -11,23 +11,13 @@
     <button class="btn-new-chat" (click)="createNewChat()">Новый диалог</button>
   </div>
 
-<!--  <div class="history-section">-->
-
-<!--    <div class="history-item active">Цифровизация производства</div>-->
-<!--    <div class="history-item">Анализ данных IoT</div>-->
-<!--    <div class="history-item">Роботизация процессов</div>-->
-<!--    <div class="history-item">Прогнозная модель</div>-->
-<!--    <div class="history-item">Оптимизация ресурсов</div>-->
-<!--    <div class="history-item">Промышленная безопасность</div>-->
-<!--    <div class="history-item">Интеграция систем</div>-->
-<!--  </div>-->
 
   @if (contexts) { <!--Отрисовать если пришли данные с Бэка-->
     <div class="history-section">
       <div class="history-title">История</div>
         @for (context of contexts; track context.context_id){
-          <div class="history-item" 
-               [class.active]="context.context_id === selectedContextId" 
+          <div class="history-item"
+               [class.active]="context.context_id === selectedContextId"
                (click)="selectContext(context)">
             {{ context.title }}
           </div>

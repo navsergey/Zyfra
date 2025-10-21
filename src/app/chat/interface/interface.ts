@@ -1,6 +1,7 @@
 export interface ChatMessage {
   sender: 'user' | 'assistant';
   text: string;
+  ts:string;
 }
 
 export interface Context {

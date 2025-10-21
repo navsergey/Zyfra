@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import {ChatMessage, Context, TurnResponse, AddProp} from '../interface/interface';
+import {ChatMessage, Context, TurnResponse} from '../interface/interface';
 import {SidebarComponent} from '../sidebar-component/sidebar-component';
 import {ChatService} from '../../services/chat-service';
 
@@ -55,13 +55,15 @@ export class ChatComponent {
           // Добавляем вопрос пользователя
           this.chatHistory.push({
             sender: 'user',
-            text: turn.q
+            text: turn.q,
+            ts: turn.ts.toString()
           });
 
           // Добавляем ответ ассистента
           this.chatHistory.push({
             sender: 'assistant',
-            text: turn.a
+            text: turn.a,
+            ts: turn.ts.toString()
           });
         });
       }
@@ -70,7 +72,7 @@ export class ChatComponent {
       setTimeout(() => {
         const container = document.getElementById('chatMessages');
         if (container) {
-          container.scrollTop = container.scrollHeight;
+          container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
         }
       }, 100);
     });
@@ -110,7 +112,7 @@ export class ChatComponent {
       this.showWelcome = false;
     }
 
-    this.appendMessage('user', messageText);
+    this.appendMessage('user', messageText, 0);
     this.userInput = '';
 
     // Сброс высоты textarea
@@ -127,19 +129,19 @@ export class ChatComponent {
       // Имитация ответа AI только для нового диалога
       setTimeout(() => {
         const randomReply = this.aiResponses[Math.floor(Math.random() * this.aiResponses.length)];
-        this.appendMessage('assistant', randomReply);
+        this.appendMessage('assistant', randomReply,0);
       }, 1200);
     }
   }
 
-  appendMessage(sender: 'user' | 'assistant', text: string): void {
-    this.chatHistory.push({ sender, text });
+  appendMessage(sender: 'user' | 'assistant', text: string, ts: number): void {
+    this.chatHistory.push({ sender, text, ts: ts.toString() });
 
     // Автоматическая прокрутка вниз
     setTimeout(() => {
       const container = document.getElementById('chatMessages');
       if (container) {
-        container.scrollTop = container.scrollHeight;
+        container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
       }
     }, 100);
   }
@@ -147,5 +149,16 @@ export class ChatComponent {
 
   getMessageIcon(sender: 'user' | 'assistant'): string {
     return sender === 'user' ? 'Вы' : 'AI';
+  }
+
+  formatTimestamp(timestamp: string): string {
+    const date = new Date(parseInt(timestamp) * 1000); // Unix timestamp в миллисекундах
+    return date.toLocaleString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   }
 }
