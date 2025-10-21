@@ -125,9 +125,20 @@ export class ChatComponent {
       }
     }, 0);
 
-    // Если выбран контекст, не добавляем новые сообщения к истории диалога
-    // В реальном приложении здесь был бы API вызов для отправки сообщения
-    if (!this.selectedContextId) {
+    // Если выбран контекст, отправляем вопрос через API
+    if (this.selectedContextId) {
+      this.chatService.QuestContext(messageText, this.selectedContextId).subscribe({
+        next: (response) => {
+          console.log('Ответ получен:', response);
+          this.appendMessage('assistant', response.question,0);
+        },
+        error: (error) => {
+          console.error('Ошибка при отправке вопроса:', error);
+          // Показываем сообщение об ошибке
+          this.appendMessage('assistant', 'Извините, произошла ошибка при обработке вашего вопроса.', Date.now());
+        }
+      });
+    } else {
       // Имитация ответа AI только для нового диалога
       setTimeout(() => {
         const randomReply = this.aiResponses[Math.floor(Math.random() * this.aiResponses.length)];

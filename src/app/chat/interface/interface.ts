@@ -48,3 +48,8 @@ export interface AddProp{
 export interface SwitchContext{
   context_id: string;
 }
+
+export interface Query{
+  question: string;
+  context_id: string;
+}
