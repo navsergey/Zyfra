@@ -5,6 +5,7 @@ import {ChatMessage, Context, TurnResponse} from '../interface/interface';
 import {SidebarComponent} from '../sidebar-component/sidebar-component';
 import {ChatService} from '../../services/chat-service';
 import {toObservable} from '@angular/core/rxjs-interop';
+import {TextFormatterService} from '../../format-text/text-formatter.service';
 
 @Component({
   selector: 'app-chat-component',
@@ -14,6 +15,7 @@ import {toObservable} from '@angular/core/rxjs-interop';
 })
 export class ChatComponent {
   chatService = inject(ChatService);
+  textFormatter = inject(TextFormatterService);
   chatHistory = signal<ChatMessage[]>([]);
   chatHistory$ = toObservable(this.chatHistory);
   userInput: string = '';
@@ -21,6 +23,7 @@ export class ChatComponent {
   contexts: Context[] = [];
   selectedContextId: string = '';
   currentDialog: TurnResponse | null = null;
+  isRequestPending: boolean = false;
 
   constructor() {
     this.loadContexts();
@@ -64,6 +67,9 @@ export class ChatComponent {
   }
 
   onContextDeleted(contextId: string): void {
+    if (this.isRequestPending) {
+      return;
+    }
     this.chatService.deleteContext(contextId).subscribe({
       next: () => {
         // Если удаляемый контекст был активным, сбрасываем состояние
@@ -132,7 +138,7 @@ export class ChatComponent {
     }
   }
 
-  
+
 
   submitMessage(): void {
     const messageText = this.userInput.trim();
@@ -151,6 +157,7 @@ export class ChatComponent {
     }, 0);
 
     if (this.selectedContextId) {
+      this.isRequestPending = true;
       this.chatService.QuestContext(messageText, this.selectedContextId).subscribe({
           next: (response) => {
             // Используем response.answer вместо response.question
@@ -164,10 +171,14 @@ export class ChatComponent {
         error: (error) => {
           console.error('Ошибка при отправке вопроса:', error);
           this.appendMessage('assistant', 'Извините, произошла ошибка при обработке вашего вопроса.', Date.now());
+        },
+        complete: () => {
+          this.isRequestPending = false;
         }
       });
     } else if (this.showWelcome) {
       // Создаем новый контекст, переключаемся на него, скрываем welcome и отправляем вопрос
+      this.isRequestPending = true;
       this.chatService.createContext().subscribe({
         next: (newContextId: string) => {
           this.loadContexts();
@@ -187,18 +198,23 @@ export class ChatComponent {
                 error: (error) => {
                   console.error('Ошибка при отправке вопроса:', error);
                   this.appendMessage('assistant', 'Извините, произошла ошибка при обработке вашего вопроса.', Date.now());
+                },
+                complete: () => {
+                  this.isRequestPending = false;
                 }
               });
             },
             error: (error) => {
               console.error('Ошибка при переключении контекста:', error);
               this.appendMessage('assistant', 'Ошибка при создании нового диалога.', Date.now());
+              this.isRequestPending = false;
             }
           });
         },
         error: (error) => {
           console.error('Ошибка при создании контекста:', error);
           this.appendMessage('assistant', 'Ошибка при создании нового диалога.', Date.now());
+          this.isRequestPending = false;
         }
       });
     }
@@ -223,38 +239,10 @@ export class ChatComponent {
   }
 
   formatTimestamp(timestamp: number): string {
-    try {
-      // Нормализуем timestamp
-      let normalizedTimestamp: number;
+    return this.textFormatter.formatTimestamp(timestamp);
+  }
 
-      if (!timestamp || timestamp === 0) {
-        normalizedTimestamp = Date.now();
-      } else if (timestamp < 1000000000000) {
-        // Если timestamp в секундах (меньше 13 знаков)
-        normalizedTimestamp = timestamp * 1000;
-      } else {
-        // Если уже в миллисекундах
-        normalizedTimestamp = timestamp;
-      }
-
-      const date = new Date(normalizedTimestamp);
-
-      if (isNaN(date.getTime())) {
-        return 'Некорректная дата';
-      }
-
-      return date.toLocaleString('ru-RU', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit' // Добавим секунды для отладки
-      });
-
-    } catch (error) {
-      console.error('Ошибка форматирования timestamp:', timestamp, error);
-      return 'Ошибка даты';
-    }
+  formatMessageText(text: string): string {
+    return this.textFormatter.formatMessageText(text);
   }
 }

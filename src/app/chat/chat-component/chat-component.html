@@ -53,7 +53,7 @@
             <div class="chat-message" [class.user]="message.sender === 'user'" [class.assistant]="message.sender === 'assistant'" *ngFor="let message of chatHistory$ | async">
                 <div class="message-icon">{{ getMessageIcon(message.sender) }}</div>
                 <div class="message-body">
-                    <div class="message-bubble">{{ message.text }}</div>
+                    <div class="message-bubble" [innerHTML]="formatMessageText(message.text)"></div>
                     <div class="message-timestamp" *ngIf="message.sender === 'assistant'&& selectedContextId">{{ formatTimestamp(message.ts) }}</div>
                 </div>
             </div>
