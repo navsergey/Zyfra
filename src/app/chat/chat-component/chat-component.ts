@@ -138,10 +138,6 @@ export class ChatComponent {
     const messageText = this.userInput.trim();
     if (!messageText) return;
 
-    if (this.showWelcome) {
-      this.showWelcome = false;
-    }
-
     // Используйте строку для временной метки
     this.appendMessage('user', messageText, 0);
     this.userInput = '';
@@ -168,6 +164,41 @@ export class ChatComponent {
         error: (error) => {
           console.error('Ошибка при отправке вопроса:', error);
           this.appendMessage('assistant', 'Извините, произошла ошибка при обработке вашего вопроса.', Date.now());
+        }
+      });
+    } else if (this.showWelcome) {
+      // Создаем новый контекст, переключаемся на него, скрываем welcome и отправляем вопрос
+      this.chatService.createContext().subscribe({
+        next: (newContextId: string) => {
+          this.loadContexts();
+          this.selectedContextId = newContextId;
+          this.chatService.switchContexts(newContextId).subscribe({
+            next: () => {
+              this.showWelcome = false;
+              this.chatService.QuestContext(messageText, newContextId).subscribe({
+                next: (response) => {
+                  if (response && response.answer) {
+                    this.appendMessage('assistant', response.answer, Date.now());
+                  } else {
+                    console.error('Некорректный ответ от сервера:', response);
+                    this.appendMessage('assistant', 'Получен некорректный ответ от сервера', Date.now());
+                  }
+                },
+                error: (error) => {
+                  console.error('Ошибка при отправке вопроса:', error);
+                  this.appendMessage('assistant', 'Извините, произошла ошибка при обработке вашего вопроса.', Date.now());
+                }
+              });
+            },
+            error: (error) => {
+              console.error('Ошибка при переключении контекста:', error);
+              this.appendMessage('assistant', 'Ошибка при создании нового диалога.', Date.now());
+            }
+          });
+        },
+        error: (error) => {
+          console.error('Ошибка при создании контекста:', error);
+          this.appendMessage('assistant', 'Ошибка при создании нового диалога.', Date.now());
         }
       });
     }
