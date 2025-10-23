@@ -1,9 +1,16 @@
 import {inject, Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
-import {Context, ContextsResponse, QueryRequest, QueryResponse, SwitchContext, TurnResponse} from '../chat/interface/interface';
-import {Observable, catchError, of, map, tap} from 'rxjs';
+import {
+  Context,
+  ContextsResponse,
+  CreateContext,
+  QueryRequest,
+  QueryResponse,
+  SwitchContext,
+  TurnResponse
+} from '../chat/interface/interface';
+import {Observable, catchError, of, map, throwError} from 'rxjs';
 import {AuthService} from '../authpage/auth/auth';
-import {TokenResponse} from '../authpage/auth/auth.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -28,6 +35,32 @@ export class ChatService {
     return new HttpHeaders({
       'Content-Type': 'application/json'
     });
+  }
+
+  createContext(): Observable<string> {
+    const headers = this.getAuthHeaders();
+
+    return this.http.post<CreateContext>(`${this.baseApiUrl}contexts/new`, {}, { headers }).pipe(
+      map(response => {
+        if (response.success) {
+          return response.context_id;
+        }
+        throw new Error(response.message);
+      }),
+      catchError(error => {
+        console.error('HTTP ошибка:', error);
+        return throwError(() => new Error('Не удалось создать новый диалог'));
+      })
+    );
+  }
+
+  deleteContext(contextId: string): Observable<string> {
+    const headers = this.getAuthHeaders();
+
+    return this.http.delete<string>(
+      `${this.baseApiUrl}contexts/${contextId}`,
+      { headers }
+    );
   }
 
   getContexts(): Observable<Context[]> {

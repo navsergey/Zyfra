@@ -33,18 +33,54 @@ export class ChatComponent {
   }
 
   onContextSelected(contextId: string): void {
-    this.chatService.switchContexts(contextId).subscribe()
+    // Если пустой ID — создаем новый контекст, обновляем историю и переключаемся на него
+    if (!contextId) {
+      this.chatService.createContext().subscribe({
+        next: (newContextId: string) => {
+          // Обновляем список контекстов (ререндер history-section)
+          this.loadContexts();
 
-    this.selectedContextId = contextId;
+          // Сохраняем и активируем новый контекст
+          this.selectedContextId = newContextId;
+          this.chatService.switchContexts(newContextId).subscribe();
 
-    if (contextId) {
-      this.loadDialog(contextId);
-    } else {
-      // Сброс к новому диалогу
-      this.chatHistory.set([]);
-      this.showWelcome = true;
-      this.currentDialog = null;
+          // Загружаем диалог для нового контекста
+          this.loadDialog(newContextId);
+        },
+        error: () => {
+          // В случае ошибки создания — возвращаемся к экрану приветствия
+          this.chatHistory.set([]);
+          this.showWelcome = true;
+          this.currentDialog = null;
+        }
+      });
+      return;
     }
+
+    // Переключение на существующий контекст
+    this.chatService.switchContexts(contextId).subscribe();
+    this.selectedContextId = contextId;
+    this.loadDialog(contextId);
+  }
+
+  onContextDeleted(contextId: string): void {
+    this.chatService.deleteContext(contextId).subscribe({
+      next: () => {
+        // Если удаляемый контекст был активным, сбрасываем состояние
+        if (this.selectedContextId === contextId) {
+          this.chatHistory.set([]);
+          this.showWelcome = true;
+          this.currentDialog = null;
+          this.selectedContextId = '';
+        }
+
+        // Обновляем список контекстов (ререндер history-section)
+        this.loadContexts();
+      },
+      error: (error) => {
+        console.error('Ошибка при удалении контекста:', error);
+      }
+    });
   }
 
   private loadDialog(contextId: string): void {
@@ -83,13 +119,6 @@ export class ChatComponent {
     });
   }
 
-  private aiResponses: string[] = [
-    'Для повышения эффективности производства рекомендую внедрить платформу ZIIoT. Она обеспечивает сбор данных с оборудования в режиме реального времени, что позволяет оперативно принимать решения и снижать простои на 25-30%.',
-    'Цифра разработала комплексные решения для различных отраслей: горнодобывающей, нефтегазовой, металлургии, энергетики. Каждый дивизион специализируется на своей области, обеспечивая глубокую экспертизу.',
-    'Роботизация предприятия начинается с аудита процессов и выявления операций с высоким риском для сотрудников. Дивизион "Цифра Роботикс" поможет разработать стратегию внедрения автоматизированных систем.',
-    'Платформа ZIIoT Oil&Gas стала стандартом для промышленной автоматизации в нефтегазовой отрасли. Она интегрирует данные с месторождений, позволяет оптимизировать добычу и прогнозировать работу оборудования.',
-  ];
-
   adjustHeight(event: Event): void {
     const elem = event.target as HTMLTextAreaElement;
     elem.style.height = 'auto';
@@ -103,10 +132,7 @@ export class ChatComponent {
     }
   }
 
-  useSamplePrompt(promptText: string): void {
-    this.userInput = promptText;
-    this.submitMessage();
-  }
+  
 
   submitMessage(): void {
     const messageText = this.userInput.trim();
@@ -131,7 +157,6 @@ export class ChatComponent {
     if (this.selectedContextId) {
       this.chatService.QuestContext(messageText, this.selectedContextId).subscribe({
           next: (response) => {
-            console.log('Ответ получен:', response);
             // Используем response.answer вместо response.question
             if (response && response.answer) {
               this.appendMessage('assistant', response.answer, Date.now());
@@ -145,12 +170,6 @@ export class ChatComponent {
           this.appendMessage('assistant', 'Извините, произошла ошибка при обработке вашего вопроса.', Date.now());
         }
       });
-    } else {
-      // Имитация ответа AI только для нового диалога
-      setTimeout(() => {
-        const randomReply = this.aiResponses[Math.floor(Math.random() * this.aiResponses.length)];
-        this.appendMessage('assistant', randomReply,0);
-      }, 1200);
     }
   }
 

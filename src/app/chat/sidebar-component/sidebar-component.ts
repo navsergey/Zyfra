@@ -13,6 +13,7 @@ export class SidebarComponent {
   @Input() contexts!: Context[]; // В компонент передаются данные и далее формируется шаблон HTML
   @Input() selectedContextId: string = ''; // ID выбранного контекста
   @Output() contextSelected = new EventEmitter<string>(); // Событие выбора контекста
+  @Output() contextDeleted = new EventEmitter<string>(); // Событие удаления контекста
 
 
   createNewChat(): void {
@@ -21,6 +22,11 @@ export class SidebarComponent {
 
   selectContext(context: Context): void {
     this.contextSelected.emit(context.context_id);
+  }
+
+  deleteContext(event: Event, contextId: string): void {
+    event.stopPropagation(); // Предотвращаем всплытие события клика на родительский элемент
+    this.contextDeleted.emit(contextId);
   }
 
 }

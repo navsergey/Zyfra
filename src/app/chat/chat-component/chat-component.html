@@ -3,7 +3,8 @@
     <app-sidebar-component
       [contexts]="contexts"
       [selectedContextId]="selectedContextId"
-      (contextSelected)="onContextSelected($event)">
+      (contextSelected)="onContextSelected($event)"
+      (contextDeleted)="onContextDeleted($event)">
     </app-sidebar-component>
     <!-- Правая область -->
     <main class="chat-area">
@@ -25,22 +26,22 @@
                     Помогаю с цифровизацией производства, анализом данных и автоматизацией процессов.
                 </p>
                 <div class="prompts-grid">
-                    <div class="prompt-card" (click)="useSamplePrompt('Как повысить эффективность производства с помощью IoT?')">
+                    <div class="prompt-card">
                         <div class="prompt-icon">📊</div>
                         <div class="prompt-label">Эффективность</div>
                         <div class="prompt-description">Как повысить эффективность производства с помощью IoT?</div>
                     </div>
-                    <div class="prompt-card" (click)="useSamplePrompt('Расскажи о платформе ZIIoT для нефтегаза')">
+                    <div class="prompt-card">
                         <div class="prompt-icon">⚙️</div>
                         <div class="prompt-label">Платформа ZIIoT</div>
                         <div class="prompt-description">Расскажи о платформе ZIIoT для нефтегаза</div>
                     </div>
-                    <div class="prompt-card" (click)="useSamplePrompt('Какие решения для горной промышленности?')">
+                    <div class="prompt-card">
                         <div class="prompt-icon">⛏️</div>
                         <div class="prompt-label">Горная отрасль</div>
                         <div class="prompt-description">Какие решения для горной промышленности?</div>
                     </div>
-                    <div class="prompt-card" (click)="useSamplePrompt('Как внедрить роботизацию на предприятии?')">
+                    <div class="prompt-card">
                         <div class="prompt-icon">🤖</div>
                         <div class="prompt-label">Роботизация</div>
                         <div class="prompt-description">Как внедрить роботизацию на предприятии?</div>

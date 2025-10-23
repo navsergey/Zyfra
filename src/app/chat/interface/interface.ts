@@ -59,3 +59,9 @@ export interface QueryResponse {
   context_id: string;
   sources: Source[];
 }
+
+export interface CreateContext {
+  success: boolean;
+  message: string;
+  context_id: string;
+}
