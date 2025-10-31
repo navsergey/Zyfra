@@ -396,6 +396,13 @@
     box-shadow: 0 0 0 4px rgba(128, 188, 72, 0.1);
 }
 
+.text-input:disabled {
+    opacity: 0.6;
+    cursor: none;
+    background: rgba(51, 63, 80, 0.5);
+    border-color: rgba(128, 188, 72, 0.15);
+}
+
 .text-input::placeholder {
     color: #8497B0;
 }
@@ -415,13 +422,21 @@
     box-shadow: 0 4px 12px rgba(128, 188, 72, 0.3);
 }
 
-.btn-send:hover {
+.btn-send:hover:not(:disabled) {
     transform: translateY(-3px);
     box-shadow: 0 8px 24px rgba(128, 188, 72, 0.5);
 }
 
-.btn-send:active {
+.btn-send:active:not(:disabled) {
     transform: translateY(-1px);
+}
+
+.btn-send:disabled {
+    background: linear-gradient(135deg, #5a7a32 0%, #7a8a38 100%);
+    cursor: not-allowed;
+    opacity: 0.5;
+    box-shadow: 0 2px 6px rgba(128, 188, 72, 0.15);
+    transform: none;
 }
 
 .send-svg {

@@ -3,6 +3,7 @@
     <app-sidebar-component
       [contexts]="contexts"
       [selectedContextId]="selectedContextId"
+      [pendingRequestContextIds]="pendingRequestContextIds"
       (contextSelected)="onContextSelected($event)"
       (contextDeleted)="onContextDeleted($event)">
     </app-sidebar-component>
@@ -82,8 +83,11 @@
                     rows="1"
                     [(ngModel)]="userInput"
                     (keydown)="checkEnter($event)"
-                    (input)="adjustHeight($event)"></textarea>
-                <button class="btn-send" (click)="submitMessage()">
+                    (input)="adjustHeight($event)"
+                    [disabled]="hasActiveRequest(selectedContextId)"></textarea>
+                <button class="btn-send" 
+                        (click)="submitMessage()" 
+                        [disabled]="hasActiveRequest(selectedContextId)">
                     <svg class="send-svg" viewBox="0 0 24 24">
                         <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
                     </svg>

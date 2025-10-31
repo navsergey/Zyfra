@@ -8,7 +8,11 @@
   </div>
 
   <div class="action-buttons">
-    <button class="btn-new-chat" (click)="createNewChat()">Новый диалог</button>
+    <button class="btn-new-chat" 
+            (click)="createNewChat()"
+            [disabled]="hasEmptyContext()">
+      Новый диалог
+    </button>
   </div>
 
 

@@ -163,6 +163,10 @@ export class ChatComponent {
   checkEnter(event: KeyboardEvent): void {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
+      // Не отправляем, если для текущего контекста уже выполняется запрос
+      if (this.selectedContextId && this.hasActiveRequest(this.selectedContextId)) {
+        return;
+      }
       this.submitMessage();
     }
   }
@@ -172,6 +176,12 @@ export class ChatComponent {
   submitMessage(): void {
     const messageText = this.userInput.trim();
     if (!messageText) return;
+
+    // Проверяем, нет ли уже активного запроса для текущего контекста
+    if (this.selectedContextId && this.hasActiveRequest(this.selectedContextId)) {
+      console.log('Запрос уже выполняется для этого контекста');
+      return;
+    }
 
     // Используйте строку для временной метки
     this.appendMessage('user', messageText, 0);
@@ -238,8 +248,9 @@ export class ChatComponent {
         complete: () => {
           this.pendingRequestContextIds.delete(requestContextId); // Удаляем контекст из списка активных запросов
           this.isRequestPending = this.pendingRequestContextIds.size > 0; // Обновляем флаг на основе наличия активных запросов
+          this.loadContexts(); // Обновляем список контекстов для обновления turn_count
           this.userTextFlag = false;
-          localStorage.setItem(`${requestContextId}`, '');
+          localStorage.removeItem(requestContextId);
           console.log('localStorage был удалён!');
         }
       });
@@ -310,7 +321,8 @@ export class ChatComponent {
                 complete: () => {
                   this.pendingRequestContextIds.delete(requestContextId); // Удаляем контекст из списка активных запросов
                   this.isRequestPending = this.pendingRequestContextIds.size > 0; // Обновляем флаг на основе наличия активных запросов
-                  localStorage.setItem(`${requestContextId}`, '');
+                  this.loadContexts(); // Обновляем список контекстов для обновления turn_count
+                  localStorage.removeItem(requestContextId);
                   console.log('localStorage был удалён для нового контекста!');
                 }
               });

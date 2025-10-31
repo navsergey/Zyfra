@@ -104,9 +104,17 @@
   box-shadow: 0 4px 12px rgba(128, 188, 72, 0.2);
 }
 
-.btn-new-chat:hover {
+.btn-new-chat:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(128, 188, 72, 0.4);
+}
+
+.btn-new-chat:disabled {
+  background: linear-gradient(135deg, #5a7a32 0%, #7a8a38 100%);
+  cursor: not-allowed;
+  opacity: 0.5;
+  box-shadow: 0 2px 6px rgba(128, 188, 72, 0.15);
+  transform: none;
 }
 
 .btn-new-chat::before {
