@@ -9,7 +9,7 @@ import {
   SwitchContext,
   TurnResponse
 } from '../chat/interface/interface';
-import {Observable, catchError, of, map, throwError} from 'rxjs';
+import {Observable, catchError, of, map, throwError, tap} from 'rxjs';
 import {AuthService} from '../authpage/auth/auth';
 
 @Injectable({
@@ -86,8 +86,12 @@ export class ChatService {
 
   switchContexts(contextId:string): Observable<SwitchContext> {
     const headers = this.getAuthHeaders();
+    console.log('switchContexts вызван с contextId:', contextId);
 
-    return this.http.post<SwitchContext>(`${this.baseApiUrl}contexts/${contextId}/activate`, {context_id: contextId}, { headers }).pipe(
+    const request$ = this.http.post<SwitchContext>(`${this.baseApiUrl}contexts/${contextId}/activate`, {context_id: contextId}, { headers });
+    console.log('HTTP запрос создан для contextId:', contextId);
+    
+    return request$.pipe(
       catchError(error => {
         console.error('Ошибка при переключении контекста:', error);
         console.error('Статус ошибки:', error.status);
@@ -99,7 +103,11 @@ export class ChatService {
         }
 
         // Возвращаем пустой объект SwitchContext в случае ошибки
-        return of();
+        return of({ context_id: contextId } as SwitchContext);
+      }),
+      tap((response: SwitchContext) => {
+        console.log('switchContexts успешный ответ:', response);
+        console.log('tap() выполнился в сервисе!');
       })
     );
   }
