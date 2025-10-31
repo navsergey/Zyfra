@@ -7,12 +7,24 @@ import {ChatService} from '../../services/chat-service';
 import {toObservable} from '@angular/core/rxjs-interop';
 import {TextFormatterService} from '../../format-text/text-formatter.service';
 import {tap} from 'rxjs';
+import { trigger, transition, style, animate } from '@angular/animations';
 
 @Component({
   selector: 'app-chat-component',
   imports: [CommonModule, FormsModule, SidebarComponent, AsyncPipe],
   templateUrl: './chat-component.html',
-  styleUrl: './chat-component.scss'
+  styleUrl: './chat-component.scss',
+  animations: [
+    trigger('fadeInOut', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(10px)' }),
+        animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+      ]),
+      transition(':leave', [
+        animate('300ms ease-in', style({ opacity: 0, transform: 'translateY(-10px)' }))
+      ])
+    ])
+  ]
 })
 export class ChatComponent {
   chatService = inject(ChatService);
@@ -25,6 +37,7 @@ export class ChatComponent {
   selectedContextId: string = '';
   currentDialog: TurnResponse | null = null;
   isRequestPending: boolean = false;
+  pendingRequestContextIds = new Set<string>(); // Set контекстов, для которых выполняются запросы
   userTextFlag: boolean = false;
 
   constructor() {
@@ -173,11 +186,16 @@ export class ChatComponent {
     }, 0);
 
     if (this.selectedContextId) {
+      // Сохраняем contextId в момент отправки запроса
+      const requestContextId = this.selectedContextId;
+      
       this.isRequestPending = true;
+      this.pendingRequestContextIds.add(requestContextId); // Добавляем контекст в список активных запросов
+      this.scrollToBottom(); // Прокручиваем к индикатору загрузки
 
       if (!this.userTextFlag) {
         try {
-          localStorage.setItem(`${this.selectedContextId}`, messageText);
+          localStorage.setItem(`${requestContextId}`, messageText);
           console.log('Сохранение!')
         }
         catch {
@@ -185,7 +203,7 @@ export class ChatComponent {
         }
       }
 
-      this.chatService.QuestContext(messageText, this.selectedContextId)
+      this.chatService.QuestContext(messageText, requestContextId)
         .pipe(
           tap(() => {
             // Устанавливаем флаг сразу после отправки запроса
@@ -194,6 +212,12 @@ export class ChatComponent {
         )
         .subscribe({
           next: (response) => {
+            // Проверяем, что пользователь всё ещё находится в том же контексте
+            if (this.selectedContextId !== requestContextId) {
+              console.log('Ответ пришёл для другого контекста, игнорируем');
+              return;
+            }
+            
             // Используем response.answer вместо response.question
             if (response && response.answer) {
               this.appendMessage('assistant', response.answer, Date.now());
@@ -203,13 +227,19 @@ export class ChatComponent {
             }
           },
         error: (error) => {
+          // Проверяем контекст даже при ошибке
+          if (this.selectedContextId !== requestContextId) {
+            console.log('Ошибка пришла для другого контекста, игнорируем');
+            return;
+          }
           console.error('Ошибка при отправке вопроса:', error);
           this.appendMessage('assistant', 'Извините, произошла ошибка при обработке вашего вопроса.', Date.now());
         },
         complete: () => {
-          this.isRequestPending = false;
+          this.pendingRequestContextIds.delete(requestContextId); // Удаляем контекст из списка активных запросов
+          this.isRequestPending = this.pendingRequestContextIds.size > 0; // Обновляем флаг на основе наличия активных запросов
           this.userTextFlag = false;
-          localStorage.setItem(`${this.selectedContextId}`, '');
+          localStorage.setItem(`${requestContextId}`, '');
           console.log('localStorage был удалён!');
         }
       });
@@ -218,10 +248,12 @@ export class ChatComponent {
 
       // Создаем новый контекст, переключаемся на него, скрываем welcome и отправляем вопрос
       this.isRequestPending = true;
+      this.scrollToBottom(); // Прокручиваем к индикатору загрузки
       this.chatService.createContext().subscribe({
         next: (newContextId: string) => {
           this.loadContexts();
           this.selectedContextId = newContextId;
+          this.pendingRequestContextIds.add(newContextId); // Добавляем контекст в список активных запросов
 
           const switchContexts$ = this.chatService.switchContexts(newContextId);
           switchContexts$
@@ -239,17 +271,26 @@ export class ChatComponent {
               console.log('switchContexts next() выполнился! Response:', response);
               this.showWelcome = false;
               
+              // Сохраняем contextId в момент отправки запроса
+              const requestContextId = newContextId;
+              
               // Сохраняем сообщение в localStorage перед отправкой запроса
               try {
-                localStorage.setItem(`${newContextId}`, messageText);
+                localStorage.setItem(`${requestContextId}`, messageText);
                 console.log('Сохранение для нового контекста!');
               } catch {
                 console.log('Ошибка сохранения в localStorage');
               }
               
-              this.chatService.QuestContext(messageText, newContextId)
+              this.chatService.QuestContext(messageText, requestContextId)
                 .subscribe({
                 next: (response) => {
+                  // Проверяем, что пользователь всё ещё находится в том же контексте
+                  if (this.selectedContextId !== requestContextId) {
+                    console.log('Ответ пришёл для другого контекста (новый), игнорируем');
+                    return;
+                  }
+                  
                   if (response && response.answer) {
                     this.appendMessage('assistant', response.answer, Date.now());
                   } else {
@@ -258,12 +299,18 @@ export class ChatComponent {
                   }
                 },
                 error: (error) => {
+                  // Проверяем контекст даже при ошибке
+                  if (this.selectedContextId !== requestContextId) {
+                    console.log('Ошибка пришла для другого контекста (новый), игнорируем');
+                    return;
+                  }
                   console.error('Ошибка при отправке вопроса:', error);
                   this.appendMessage('assistant', 'Извините, произошла ошибка при обработке вашего вопроса.', Date.now());
                 },
                 complete: () => {
-                  this.isRequestPending = false;
-                  localStorage.setItem(`${newContextId}`, '');
+                  this.pendingRequestContextIds.delete(requestContextId); // Удаляем контекст из списка активных запросов
+                  this.isRequestPending = this.pendingRequestContextIds.size > 0; // Обновляем флаг на основе наличия активных запросов
+                  localStorage.setItem(`${requestContextId}`, '');
                   console.log('localStorage был удалён для нового контекста!');
                 }
               });
@@ -271,14 +318,20 @@ export class ChatComponent {
             error: (error) => {
               console.error('Ошибка при переключении контекста:', error);
               this.appendMessage('assistant', 'Ошибка при создании нового диалога.', Date.now());
-              this.isRequestPending = false;
+              const newContextId = this.selectedContextId;
+              this.pendingRequestContextIds.delete(newContextId); // Удаляем контекст из списка активных запросов
+              this.isRequestPending = this.pendingRequestContextIds.size > 0;
             }
           });
         },
         error: (error) => {
           console.error('Ошибка при создании контекста:', error);
           this.appendMessage('assistant', 'Ошибка при создании нового диалога.', Date.now());
-          this.isRequestPending = false;
+          const newContextId = this.selectedContextId;
+          if (newContextId) {
+            this.pendingRequestContextIds.delete(newContextId); // Удаляем контекст из списка активных запросов
+          }
+          this.isRequestPending = this.pendingRequestContextIds.size > 0;
         }
       });
     }
@@ -289,6 +342,10 @@ export class ChatComponent {
     this.chatHistory.update(messages => [...messages, { sender:sender, text:text, ts: ts }]);
 
     // Автоматическая прокрутка вниз
+    this.scrollToBottom();
+  }
+
+  private scrollToBottom(): void {
     setTimeout(() => {
       const container = document.getElementById('chatMessages');
       if (container) {
@@ -308,6 +365,11 @@ export class ChatComponent {
 
   formatMessageText(text: string): string {
     return this.textFormatter.formatMessageText(text);
+  }
+
+  // Проверяет, есть ли активный запрос для данного контекста
+  hasActiveRequest(contextId: string): boolean {
+    return this.pendingRequestContextIds.has(contextId);
   }
 }
 

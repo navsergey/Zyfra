@@ -57,6 +57,20 @@
                     <div class="message-timestamp" *ngIf="message.sender === 'assistant'&& selectedContextId">{{ formatTimestamp(message.ts) }}</div>
                 </div>
             </div>
+
+            <!-- Индикатор загрузки -->
+            <div class="chat-message assistant loading-message" *ngIf="hasActiveRequest(selectedContextId)" @fadeInOut>
+                <div class="message-icon">AI</div>
+                <div class="message-body">
+                    <div class="message-bubble loading-bubble">
+                        <div class="typing-indicator">
+                            <span class="dot"></span>
+                            <span class="dot"></span>
+                            <span class="dot"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <footer class="input-container">
