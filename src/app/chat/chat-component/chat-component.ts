@@ -39,14 +39,23 @@ export class ChatComponent {
   isRequestPending: boolean = false;
   pendingRequestContextIds = new Set<string>(); // Set контекстов, для которых выполняются запросы
   userTextFlag: boolean = false;
+  healthStatus: string = 'unknown'; // Статус здоровья системы
 
   constructor() {
     this.loadContexts();
+    this.checkHealth();
   }
 
   private loadContexts(): void {
     this.chatService.getContexts().subscribe( val => {
       this.contexts = val;
+    });
+  }
+
+  private checkHealth(): void {
+    this.chatService.getHealth().subscribe(health => {
+      this.healthStatus = health.status;
+      console.log('Health status:', this.healthStatus);
     });
   }
 
@@ -112,20 +121,22 @@ export class ChatComponent {
       // Преобразуем turns в chatHistory
       const messages: ChatMessage[] = [];
       if (response.turns && response.turns.length > 0) {
-        response.turns.forEach(turn => {
+        response.turns.forEach((turn, index) => {
           // Добавляем вопрос пользователя
           messages.push({
             sender: 'user',
             text: turn.q,
-            ts: turn.ts
+            ts: turn.ts,
           });
 
-          // Добавляем ответ ассистента
+          // Добавляем ответ ассистента с turn_index
           messages.push({
             sender: 'assistant',
             text: turn.a,
-            ts: turn.ts
+            ts: turn.ts,
+            turn_index: index, // Индекс в массиве turns
           });
+          
         });
       }
       this.chatHistory.set(messages);

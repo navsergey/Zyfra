@@ -103,9 +103,18 @@
 .status-dot {
     width: 8px;
     height: 8px;
-    background: #80bc48;
     border-radius: 50%;
     animation: pulse 2s ease-in-out infinite;
+}
+
+.status-dot.healthy {
+    background: #80bc48;
+    box-shadow: 0 0 8px rgba(128, 188, 72, 0.4);
+}
+
+.status-dot.unhealthy {
+    background: #b85252;
+    box-shadow: 0 0 8px rgba(184, 82, 82, 0.4);
 }
 
 @keyframes pulse {

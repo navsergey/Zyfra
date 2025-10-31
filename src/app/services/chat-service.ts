@@ -3,7 +3,7 @@ import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {
   Context,
   ContextsResponse,
-  CreateContext,
+  CreateContext, FeedbackRequest, Health,
   QueryRequest,
   QueryResponse,
   SwitchContext,
@@ -90,7 +90,7 @@ export class ChatService {
 
     const request$ = this.http.post<SwitchContext>(`${this.baseApiUrl}contexts/${contextId}/activate`, {context_id: contextId}, { headers });
     console.log('HTTP запрос создан для contextId:', contextId);
-    
+
     return request$.pipe(
       catchError(error => {
         console.error('Ошибка при переключении контекста:', error);
@@ -170,8 +170,52 @@ export class ChatService {
     );
   }
 
+  getHealth(): Observable<Health> {
+    const headers = this.getAuthHeaders();
+
+    return this.http.get<Health>(`${this.baseApiUrl}health`, { headers }).pipe(
+      catchError(error => {
+        console.error('Ошибка при получении контекста:', error);
+        console.error('Статус ошибки:', error.status);
+        console.error('Сообщение ошибки:', error.message);
+
+        // Если 403, возможно проблема с авторизацией
+        if (error.status === 403) {
+          console.error('403 Forbidden - проверьте токен авторизации');
+        }
+
+        // Возвращаем пустой объект Health в случае ошибки
+        return of({
+          status: 'error',
+          documents_loaded: 0,
+          vector_db_initialized: false
+        });
+      })
+    );
+  }
 
 
+  Feedback(): Observable<FeedbackRequest> {
+    const headers = this.getAuthHeaders();
 
+    return this.http.post<FeedbackRequest>(`${this.baseApiUrl}feedback`, { headers }).pipe(
+      catchError(error => {
+        console.error('Ошибка при получении контекста:', error);
+        console.error('Статус ошибки:', error.status);
+        console.error('Сообщение ошибки:', error.message);
 
+        // Если 403, возможно проблема с авторизацией
+        if (error.status === 403) {
+          console.error('403 Forbidden - проверьте токен авторизации');
+        }
+
+        // Возвращаем пустой объект Health в случае ошибки
+        return of({
+          context_id: 'error',
+          turn_index: 0,
+          feedback_type: ''
+        });
+      })
+    );
+  }
 }

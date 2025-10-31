@@ -12,8 +12,8 @@
         <header class="top-bar">
             <h1 class="chat-title">Ассистент <span>Цифры</span></h1>
             <div class="status-indicator">
-                <div class="status-dot"></div>
-                <span>Онлайн</span>
+                <div class="status-dot" [class.healthy]="healthStatus === 'healthy'" [class.unhealthy]="healthStatus !== 'healthy'"></div>
+                <span>{{ healthStatus === 'healthy' ? 'Онлайн' : 'Оффлайн' }}</span>
             </div>
         </header>
 

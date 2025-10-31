@@ -1,7 +1,8 @@
 export interface ChatMessage {
   sender: 'user' | 'assistant';
   text: string;
-  ts:number;
+  ts: number;
+  turn_index?: number; // Индекс сообщения в массиве turns (только для ассистента)
 }
 
 export interface Context {
@@ -64,4 +65,16 @@ export interface CreateContext {
   success: boolean;
   message: string;
   context_id: string;
+}
+
+export interface  Health{
+  status: string,
+  documents_loaded: number,
+  vector_db_initialized: boolean
+}
+
+export interface FeedbackRequest {
+  context_id: string;
+  turn_index: number;
+  feedback_type: string;
 }

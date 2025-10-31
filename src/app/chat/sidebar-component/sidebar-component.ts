@@ -1,5 +1,5 @@
 import {Component, Input, Output, EventEmitter} from '@angular/core';
-import {ChatMessage, Context} from '../interface/interface';
+import {Context} from '../interface/interface';
 
 @Component({
   selector: 'app-sidebar-component',
@@ -38,12 +38,12 @@ export class SidebarComponent {
   // Проверяет, есть ли пустой контекст (без сообщений и без активного запроса)
   hasEmptyContext(): boolean {
     if (!this.contexts) return false;
-    
+
     // Контекст считается пустым, только если:
     // 1. В нём нет сообщений (turn_count === 0)
     // 2. И для него НЕ выполняется запрос (нет в pendingRequestContextIds)
-    return this.contexts.some(context => 
-      context.turn_count === 0 && 
+    return this.contexts.some(context =>
+      context.turn_count === 0 &&
       !this.pendingRequestContextIds?.has(context.context_id)
     );
   }
