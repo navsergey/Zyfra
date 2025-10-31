@@ -46,6 +46,12 @@ export class TextFormatterService {
       return text;
     }
 
+    // Удаляем текст, начинающийся с "[Документ" до конца
+    const documentIndex = text.indexOf('[Документ');
+    if (documentIndex !== -1) {
+      text = text.substring(0, documentIndex).trim();
+    }
+
     // Сначала обрабатываем экранированные символы
     let processedText = text
       .replace(/\\n/g, '\n')  // Заменяем \n на реальные переносы строк

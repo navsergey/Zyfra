@@ -195,12 +195,18 @@ export class ChatService {
   }
 
 
-  Feedback(): Observable<FeedbackRequest> {
+  Feedback(contextId: string, turn_index: number, feedback_type: string): Observable<FeedbackRequest> {
     const headers = this.getAuthHeaders();
 
-    return this.http.post<FeedbackRequest>(`${this.baseApiUrl}feedback`, { headers }).pipe(
+    const request: FeedbackRequest = {
+      context_id: contextId,
+      turn_index: turn_index,
+      feedback_type: feedback_type
+    };
+
+    return this.http.post<FeedbackRequest>(`${this.baseApiUrl}feedback`, request, { headers }).pipe(
       catchError(error => {
-        console.error('Ошибка при получении контекста:', error);
+        console.error('Ошибка при отправке обратной связи:', error);
         console.error('Статус ошибки:', error.status);
         console.error('Сообщение ошибки:', error.message);
 
@@ -209,11 +215,11 @@ export class ChatService {
           console.error('403 Forbidden - проверьте токен авторизации');
         }
 
-        // Возвращаем пустой объект Health в случае ошибки
+        // Возвращаем объект с ошибкой
         return of({
-          context_id: 'error',
-          turn_index: 0,
-          feedback_type: ''
+          context_id: contextId,
+          turn_index: turn_index,
+          feedback_type: 'error'
         });
       })
     );

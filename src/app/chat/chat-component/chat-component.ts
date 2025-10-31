@@ -135,11 +135,14 @@ export class ChatComponent {
             text: turn.a,
             ts: turn.ts,
             turn_index: index, // Индекс в массиве turns
+            context_id: contextId 
           });
           
+          console.log(`Turn ${index}: turn_index = ${index}, context_id = ${contextId}, question: "${turn.q.substring(0, 50)}..."`);
         });
       }
       this.chatHistory.set(messages);
+      console.log('ChatHistory с turn_index и context_id:', messages.filter(m => m.sender === 'assistant'));
 
       // Проверяем, есть ли сохраненное сообщение в localStorage (ожидающее ответа)
       const pendingMessage = localStorage.getItem(contextId);
@@ -393,6 +396,35 @@ export class ChatComponent {
   // Проверяет, есть ли активный запрос для данного контекста
   hasActiveRequest(contextId: string): boolean {
     return this.pendingRequestContextIds.has(contextId);
+  }
+
+  // Отправка обратной связи (Like/Dislike)
+  sendFeedback(contextId: string, turn_index: number, feedback_type: string): void {
+    console.log(`Отправка обратной связи: contextId=${contextId}, turn_index=${turn_index}, type=${feedback_type}`);
+    
+    this.chatService.Feedback(contextId, turn_index, feedback_type).subscribe({
+      next: (response) => {
+        console.log('Обратная связь отправлена успешно:', response);
+      },
+      error: (error) => {
+        console.error('Ошибка при отправке обратной связи:', error);
+      }
+    });
+  }
+
+  // Копирование сообщения в буфер обмена
+  copyMessage(text: string): void {
+    // Очищаем текст от HTML тегов для копирования
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = text;
+    const cleanText = tempDiv.textContent || tempDiv.innerText || '';
+    
+    navigator.clipboard.writeText(cleanText).then(() => {
+      console.log('Текст скопирован в буфер обмена');
+      // Можно добавить визуальное подтверждение (toast notification)
+    }).catch(err => {
+      console.error('Ошибка при копировании текста:', err);
+    });
   }
 }
 

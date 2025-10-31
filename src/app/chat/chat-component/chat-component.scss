@@ -215,6 +215,66 @@
     opacity: 0.9;
 }
 
+/* Кнопки обратной связи */
+.feedback-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding-left: 24px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.chat-message:hover .feedback-buttons {
+    opacity: 1;
+}
+
+.feedback-btn {
+    background: rgba(51, 63, 80, 0.5);
+    border: 1px solid rgba(128, 188, 72, 0.2);
+    border-radius: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s;
+    color: #8497B0;
+    font-size: 12px;
+}
+
+.feedback-btn svg {
+    fill: currentColor;
+    transition: all 0.3s;
+}
+
+.feedback-btn:hover {
+    background: rgba(51, 63, 80, 0.8);
+    transform: translateY(-2px);
+}
+
+.like-btn:hover {
+    border-color: #80bc48;
+    color: #80bc48;
+    box-shadow: 0 4px 12px rgba(128, 188, 72, 0.2);
+}
+
+.dislike-btn:hover {
+    border-color: #b85252;
+    color: #b85252;
+    box-shadow: 0 4px 12px rgba(184, 82, 82, 0.2);
+}
+
+.copy-btn:hover {
+    border-color: #3D9E9A;
+    color: #3D9E9A;
+    box-shadow: 0 4px 12px rgba(61, 158, 164, 0.2);
+}
+
+.feedback-btn:active {
+    transform: translateY(0);
+}
+
 /* Приветственный экран */
 .welcome-container {
     display: flex;
