@@ -4,6 +4,7 @@ export interface ChatMessage {
   ts: number;
   turn_index?: number; // Индекс сообщения в массиве turns (только для ассистента)
   context_id?: string; // ID контекста (только для ассистента)
+  sources?: Source[]; // Источники для сообщений ассистента
 }
 
 export interface Context {

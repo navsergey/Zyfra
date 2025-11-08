@@ -46,10 +46,15 @@ export class TextFormatterService {
       return text;
     }
 
-    // Удаляем текст, начинающийся с "[Документ" до конца
+    // Удаляем текст, начинающийся с "[Документ" или "Источники:" до конца
     const documentIndex = text.indexOf('[Документ');
-    if (documentIndex !== -1) {
-      text = text.substring(0, documentIndex).trim();
+    const sourcesIndex = text.indexOf('Источники:');
+    
+    // Находим минимальный индекс (самый ранний маркер)
+    const indices = [documentIndex, sourcesIndex].filter(index => index !== -1);
+    if (indices.length > 0) {
+      const minIndex = Math.min(...indices);
+      text = text.substring(0, minIndex).trim();
     }
 
     // Сначала обрабатываем экранированные символы
@@ -96,4 +101,14 @@ export class TextFormatterService {
 
     return formattedText;
   }
+
+
+    // Форматирование списка страниц
+    formatPages(pages: number[]): string {
+      if (!pages || pages.length === 0) {
+        return '';
+      }
+      return pages.map((p: number) => p + ' c.').join(', ');
+    }
+    
 }
