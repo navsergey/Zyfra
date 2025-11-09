@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule, AsyncPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import {ChatMessage, Context, TurnResponse, Source} from '../interface/interface';
+import {ChatMessage, Context, TurnResponse, Source, FilterRulesResponse} from '../interface/interface';
 import {SidebarComponent} from '../sidebar-component/sidebar-component';
 import {ChatService} from '../../services/chat-service';
 import {toObservable} from '@angular/core/rxjs-interop';
@@ -34,6 +34,7 @@ export class ChatComponent {
   userInput: string = '';
   showWelcome: boolean = true;
   contexts: Context[] = [];
+  filters: FilterRulesResponse | null = null;
   selectedContextId: string = '';
   currentDialog: TurnResponse | null = null;
   isRequestPending: boolean = false;
@@ -49,6 +50,10 @@ export class ChatComponent {
   private loadContexts(): void {
     this.chatService.getContexts().subscribe( val => {
       this.contexts = val;
+    });
+
+    this.chatService.getFilterRules().subscribe( val => {
+      this.filters = val;
     });
   }
 
@@ -299,6 +304,7 @@ export class ChatComponent {
             next: (response) => {
               console.log('switchContexts next() выполнился! Response:', response);
               this.showWelcome = false;
+
 
               // Сохраняем contextId в момент отправки запроса
               const requestContextId = newContextId;

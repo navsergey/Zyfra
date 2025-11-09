@@ -41,3 +41,6 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Admin configuration (contains sensitive data)
+src/app/config/admin-config.ts

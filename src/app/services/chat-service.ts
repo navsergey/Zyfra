@@ -3,7 +3,7 @@ import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {
   Context,
   ContextsResponse,
-  CreateContext, FeedbackRequest, Health,
+  CreateContext, FeedbackRequest, FilterRulesResponse, Health,
   QueryRequest,
   QueryResponse,
   SwitchContext,
@@ -11,6 +11,7 @@ import {
 } from '../chat/interface/interface';
 import {Observable, catchError, of, map, throwError, tap} from 'rxjs';
 import {AuthService} from '../authpage/auth/auth';
+import {ADMIN_CONFIG} from '../config/admin-config';
 
 @Injectable({
   providedIn: 'root'
@@ -194,6 +195,36 @@ export class ChatService {
     );
   }
 
+
+  getFilterRules(): Observable<FilterRulesResponse> {
+    const baseHeaders = this.getAuthHeaders();
+    // Добавляем X-Admin-Key к существующим headers
+    const headers = baseHeaders.set(ADMIN_CONFIG.ADMIN_KEY_HEADER, ADMIN_CONFIG.ADMIN_KEY_VALUE);
+
+    return this.http.get<FilterRulesResponse>(`${this.baseApiUrl}config/filter-rules`, { headers }).pipe(
+      catchError(error => {
+        console.error('Ошибка при получении правил фильтрации:', error);
+        console.error('Статус ошибки:', error.status);
+        console.error('Сообщение ошибки:', error.message);
+
+        // Если 403, возможно проблема с авторизацией
+        if (error.status === 403) {
+          console.error('403 Forbidden - проверьте токен авторизации');
+        }
+
+        // Возвращаем объект FilterRulesResponse с ошибкой
+        return of({
+          success: false,
+          message: 'Ошибка при получении правил фильтрации',
+          filter_rules: {
+            comment: '',
+            default_active_sources: [],
+            button_rules: {}
+          }
+        });
+      })
+    );
+  }
 
   Feedback(contextId: string, turn_index: number, feedback_type: string): Observable<FeedbackRequest> {
     const headers = this.getAuthHeaders();

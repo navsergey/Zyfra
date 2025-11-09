@@ -80,3 +80,24 @@ export interface FeedbackRequest {
   turn_index: number;
   feedback_type: string;
 }
+
+
+export interface FilterRulesResponse {
+  success: boolean;
+  message: string;
+  filter_rules: {
+    comment: string;
+    default_active_sources: string[];
+    button_rules: Record<string, ButtonRule>;
+  };
+}
+
+export interface ButtonRule {
+  display_name: string;
+  category: 'docs' | 'support' | 'kb';
+  has_button: boolean;
+  always_active?: boolean;
+  default_active?: boolean;
+  excludes?: string[];
+  includes?: string[];
+}
