@@ -1,7 +1,19 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule, AsyncPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import {ChatMessage, Context, TurnResponse, Source, FilterRulesResponse} from '../interface/interface';
+import {
+  ChatMessage,
+  Context,
+  TurnResponse,
+  Source,
+  FilterRulesResponse,
+  StreamEvent,
+  isTokenEvent,
+  isAnswerEvent,
+  isDoneEvent,
+  isStatusEvent,
+  isErrorEvent
+} from '../interface/interface';
 import {SidebarComponent} from '../sidebar-component/sidebar-component';
 import {ChatService} from '../../services/chat-service';
 import {toObservable} from '@angular/core/rxjs-interop';
@@ -228,16 +240,14 @@ export class ChatComponent {
       this.scrollToBottom(); // Прокручиваем к индикатору загрузки
 
       if (!this.userTextFlag) {
-        try {
-          localStorage.setItem(`${requestContextId}`, messageText);
-          console.log('Сохранение!')
-        }
-        catch {
-          console.log('Ошибка')
-        }
+        localStorage.setItem(`${requestContextId}`, messageText);
       }
 
-      this.chatService.QuestContext(messageText, requestContextId , this.filterSearch)
+      // Переменная для накопления текста при потоковом получении
+      let accumulatedText = '';
+      let firstTokenReceived = false;
+
+      this.chatService.QuestStreamContext(messageText, requestContextId, this.filterSearch)
         .pipe(
           tap(() => {
             // Устанавливаем флаг сразу после отправки запроса
@@ -245,39 +255,66 @@ export class ChatComponent {
           })
         )
         .subscribe({
-          next: (response) => {
+          next: (event: StreamEvent) => {
             // Проверяем, что пользователь всё ещё находится в том же контексте
             if (this.selectedContextId !== requestContextId) {
-              console.log('Ответ пришёл для другого контекста, игнорируем');
               return;
             }
 
-            // Используем response.answer вместо response.question
-            if (response && response.answer) {
-              this.appendMessage('assistant', response.answer, Date.now(), response.sources);
-            } else {
-              console.error('Некорректный ответ от сервера:', response);
-              this.appendMessage('assistant', 'Получен некорректный ответ от сервера', Date.now());
+            if (isTokenEvent(event)) {
+              // При получении первого токена убираем индикатор загрузки
+              if (!firstTokenReceived) {
+                firstTokenReceived = true;
+                this.pendingRequestContextIds.delete(requestContextId);
+                this.isRequestPending = this.pendingRequestContextIds.size > 0;
+              }
+
+              // Постепенно добавляем токены к ответу
+              accumulatedText += event.content;
+              this.updateLastAssistantMessage(accumulatedText, requestContextId);
+
+            } else if (isAnswerEvent(event)) {
+              // При получении полного ответа убираем индикатор загрузки
+              if (!firstTokenReceived) {
+                firstTokenReceived = true;
+                this.pendingRequestContextIds.delete(requestContextId);
+                this.isRequestPending = this.pendingRequestContextIds.size > 0;
+              }
+
+              // Получили полный ответ сразу
+              accumulatedText = event.content;
+              this.updateLastAssistantMessage(accumulatedText, requestContextId);
+
+            } else if (isDoneEvent(event)) {
+              // Завершение - добавляем источники
+              this.finalizeLastAssistantMessage(event.sources, event.context_id);
+
+            } else if (isStatusEvent(event)) {
+              // Статусное сообщение
+              console.log('Status:', event.message);
+
             }
           },
-        error: (error) => {
-          // Проверяем контекст даже при ошибке
-          if (this.selectedContextId !== requestContextId) {
-            console.log('Ошибка пришла для другого контекста, игнорируем');
-            return;
+          error: (error) => {
+            // Проверяем контекст даже при ошибке
+            if (this.selectedContextId !== requestContextId) {
+              return;
+            }
+            console.error('Ошибка при отправке вопроса:', error);
+            this.appendMessage('assistant', 'Извините, произошла ошибка при обработке вашего вопроса.', Date.now());
+            // Убираем индикатор загрузки при ошибке
+            this.pendingRequestContextIds.delete(requestContextId);
+            this.isRequestPending = this.pendingRequestContextIds.size > 0;
+          },
+          complete: () => {
+            // На случай если firstTokenReceived не сработал (например, только done без токенов)
+            this.pendingRequestContextIds.delete(requestContextId);
+            this.isRequestPending = this.pendingRequestContextIds.size > 0;
+            this.loadContexts();
+            this.userTextFlag = false;
+            localStorage.removeItem(requestContextId);
           }
-          console.error('Ошибка при отправке вопроса:', error);
-          this.appendMessage('assistant', 'Извините, произошла ошибка при обработке вашего вопроса.', Date.now());
-        },
-        complete: () => {
-          this.pendingRequestContextIds.delete(requestContextId); // Удаляем контекст из списка активных запросов
-          this.isRequestPending = this.pendingRequestContextIds.size > 0; // Обновляем флаг на основе наличия активных запросов
-          this.loadContexts(); // Обновляем список контекстов для обновления turn_count
-          this.userTextFlag = false;
-          localStorage.removeItem(requestContextId);
-          console.log('localStorage был удалён!');
-        }
-      });
+        });
     } else  {
       this.showWelcome = false
 
@@ -308,36 +345,71 @@ export class ChatComponent {
               // Сохраняем сообщение в localStorage перед отправкой запроса
               localStorage.setItem(`${requestContextId}`, messageText);
 
-              this.chatService.QuestContext(messageText, requestContextId ,this.filterSearch)
-                .subscribe({
-                next: (response) => {
-                  // Проверяем, что пользователь всё ещё находится в том же контексте
-                  if (this.selectedContextId !== requestContextId) {
-                    return;
-                  }
+              // Переменная для накопления текста при потоковом получении
+              let accumulatedText = '';
+              let firstTokenReceived = false;
 
-                  if (response && response.answer) {
-                    this.appendMessage('assistant', response.answer, Date.now(), response.sources);
-                  } else {
-                    console.error('Некорректный ответ от сервера:', response);
-                    this.appendMessage('assistant', 'Получен некорректный ответ от сервера', Date.now());
+              this.chatService.QuestStreamContext(messageText, requestContextId, this.filterSearch)
+                .subscribe({
+                  next: (event: StreamEvent) => {
+                    // Проверяем, что пользователь всё ещё находится в том же контексте
+                    if (this.selectedContextId !== requestContextId) {
+                      return;
+                    }
+
+                    if (isTokenEvent(event)) {
+                      // При получении первого токена убираем индикатор загрузки
+                      if (!firstTokenReceived) {
+                        firstTokenReceived = true;
+                        this.pendingRequestContextIds.delete(requestContextId);
+                        this.isRequestPending = this.pendingRequestContextIds.size > 0;
+                      }
+
+                      // Постепенно добавляем токены к ответу
+                      accumulatedText += event.content;
+                      this.updateLastAssistantMessage(accumulatedText, requestContextId);
+
+                    } else if (isAnswerEvent(event)) {
+                      // При получении полного ответа убираем индикатор загрузки
+                      if (!firstTokenReceived) {
+                        firstTokenReceived = true;
+                        this.pendingRequestContextIds.delete(requestContextId);
+                        this.isRequestPending = this.pendingRequestContextIds.size > 0;
+                      }
+
+                      // Получили полный ответ сразу
+                      accumulatedText = event.content;
+                      this.updateLastAssistantMessage(accumulatedText, requestContextId);
+
+                    } else if (isDoneEvent(event)) {
+                      // Завершение - добавляем источники
+                      this.finalizeLastAssistantMessage(event.sources, event.context_id);
+
+                    } else if (isStatusEvent(event)) {
+                      // Статусное сообщение
+                      console.log('Status:', event.message);
+
+                    }
+                  },
+                  error: (error) => {
+                    // Проверяем контекст даже при ошибке
+                    if (this.selectedContextId !== requestContextId) {
+                      return;
+                    }
+                    console.error('Ошибка при отправке вопроса:', error);
+                    this.appendMessage('assistant', 'Извините, произошла ошибка при обработке вашего вопроса.', Date.now());
+                    // Убираем индикатор загрузки при ошибке
+                    this.pendingRequestContextIds.delete(requestContextId);
+                    this.isRequestPending = this.pendingRequestContextIds.size > 0;
+                  },
+                  complete: () => {
+                    // На случай если firstTokenReceived не сработал (например, только done без токенов)
+                    this.pendingRequestContextIds.delete(requestContextId);
+                    this.isRequestPending = this.pendingRequestContextIds.size > 0;
+                    this.loadContexts();
+                    localStorage.removeItem(requestContextId);
                   }
-                },
-                error: (error) => {
-                  // Проверяем контекст даже при ошибке
-                  if (this.selectedContextId !== requestContextId) {
-                    return;
-                  }
-                  console.error('Ошибка при отправке вопроса:', error);
-                  this.appendMessage('assistant', 'Извините, произошла ошибка при обработке вашего вопроса.', Date.now());
-                },
-                complete: () => {
-                  this.pendingRequestContextIds.delete(requestContextId); // Удаляем контекст из списка активных запросов
-                  this.isRequestPending = this.pendingRequestContextIds.size > 0; // Обновляем флаг на основе наличия активных запросов
-                  this.loadContexts(); // Обновляем список контекстов для обновления turn_count
-                  localStorage.removeItem(requestContextId);
-                }
-              });
+                });
             },
             error: (error) => {
               console.error('Ошибка при переключении контекста:', error);
@@ -375,6 +447,49 @@ export class ChatComponent {
 
     // Автоматическая прокрутка вниз
     this.scrollToBottom();
+  }
+
+  // Обновление последнего сообщения ассистента (для потокового ответа)
+  private updateLastAssistantMessage(text: string, contextId?: string): void {
+    this.chatHistory.update(messages => {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage?.sender === 'assistant') {
+        // Обновляем существующее сообщение
+        lastMessage.text = text;
+        // Устанавливаем context_id если передан
+        if (contextId && !lastMessage.context_id) {
+          lastMessage.context_id = contextId;
+        }
+        return [...messages];
+      } else {
+        // Если нет сообщения ассистента, создаем новое
+        return [...messages, {
+          sender: 'assistant',
+          text: text,
+          ts: Date.now(),
+          context_id: contextId // Сразу устанавливаем context_id
+        }];
+      }
+    });
+    this.scrollToBottom();
+  }
+
+  // Финализация последнего сообщения (добавление источников, context_id и turn_index)
+  private finalizeLastAssistantMessage(sources: Source[], contextId: string): void {
+    const sourcesWithPages = sources?.filter(source => source.pages && source.pages.length > 0);
+
+    this.chatHistory.update(messages => {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage?.sender === 'assistant') {
+        lastMessage.sources = sourcesWithPages && sourcesWithPages.length > 0 ? sourcesWithPages : undefined;
+        lastMessage.context_id = contextId;
+        
+        // Вычисляем turn_index: это количество ответов ассистента в истории минус 1 (текущее сообщение)
+        const assistantMessagesCount = messages.filter(m => m.sender === 'assistant').length;
+        lastMessage.turn_index = assistantMessagesCount - 1;
+      }
+      return [...messages];
+    });
   }
 
   private scrollToBottom(): void {

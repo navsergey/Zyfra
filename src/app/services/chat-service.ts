@@ -7,9 +7,11 @@ import {
   QueryRequest,
   QueryResponse,
   SwitchContext,
-  TurnResponse
+  TurnResponse,
+  StreamEvent,
+  ErrorEvent
 } from '../chat/interface/interface';
-import {Observable, catchError, of, map, throwError, tap} from 'rxjs';
+import {Observable, catchError, of, map, throwError, tap, Observer} from 'rxjs';
 import {AuthService} from '../authpage/auth/auth';
 
 @Injectable({
@@ -136,6 +138,129 @@ export class ChatService {
       })
     );
   }
+
+
+  QuestStreamContext(question: string, contextId: string, active_source: string[]): Observable<StreamEvent> {
+    const token = this.authService.getToken();
+    
+    // Создаем объект запроса с правильным интерфейсом
+    const request: QueryRequest = {
+      context_id: contextId,
+      question: question,
+      active_source: active_source
+    };
+
+    return new Observable<StreamEvent>((observer: Observer<StreamEvent>) => {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      // Используем fetch API для работы с SSE
+      fetch(`${this.baseApiUrl}query/stream`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(request)
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          if (!response.body) {
+            throw new Error('Response body is null');
+          }
+
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder('utf-8');
+          let buffer = '';
+
+          // Функция для чтения потока
+          const readStream = (): void => {
+            reader.read().then(({ done, value }) => {
+              if (done) {
+                console.log('Stream complete');
+                observer.complete();
+                return;
+              }
+
+              // Декодируем чанк данных
+              buffer += decoder.decode(value, { stream: true });
+              
+              // Разбиваем буфер на строки
+              const lines = buffer.split('\n');
+              
+              // Оставляем последнюю (возможно неполную) строку в буфере
+              buffer = lines.pop() || '';
+
+              // Обрабатываем каждую строку
+              for (const line of lines) {
+                const trimmedLine = line.trim();
+                
+                // SSE формат: "data: {...}"
+                if (trimmedLine.startsWith('data: ')) {
+                  const jsonStr = trimmedLine.substring(6); // Убираем "data: "
+                  
+                  try {
+                    const event = JSON.parse(jsonStr) as StreamEvent;
+                    observer.next(event);
+                    
+                    // Если получили событие 'done', завершаем поток
+                    if (event.type === 'done') {
+                      observer.complete();
+                      reader.cancel();
+                      return;
+                    }
+                  } catch (parseError) {
+                    console.error('Ошибка парсинга JSON:', parseError, 'JSON:', jsonStr);
+                  }
+                }
+              }
+
+              // Продолжаем читать поток
+              readStream();
+            }).catch(error => {
+              console.error('Ошибка при чтении потока:', error);
+              const errorEvent: ErrorEvent = {
+                type: 'error',
+                message: 'Ошибка при чтении потока данных',
+                error_code: 'STREAM_READ_ERROR'
+              };
+              observer.next(errorEvent);
+              observer.error(error);
+            });
+          };
+
+          // Начинаем читать поток
+          readStream();
+        })
+        .catch(error => {
+          console.error('Ошибка при отправке запроса:', error);
+          
+          // Отправляем событие ошибки
+          const errorEvent: ErrorEvent = {
+            type: 'error',
+            message: error.message || 'Ошибка при подключении к серверу',
+            error_code: 'CONNECTION_ERROR'
+          };
+          observer.next(errorEvent);
+          observer.error(error);
+        });
+
+      // Cleanup функция для отмены запроса при unsubscribe
+      return () => {
+        console.log('Отписка от SSE потока');
+      };
+    });
+  }
+
+
+
+
+
 
   getTurn(contextId:string): Observable<TurnResponse> {
     const headers = this.getAuthHeaders();

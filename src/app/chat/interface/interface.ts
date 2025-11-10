@@ -64,6 +64,77 @@ export interface QueryResponse {
   sources: Source[];
 }
 
+
+
+// Базовый интерфейс для всех типов сообщений
+export interface BaseStreamEvent {
+  type: string;
+}
+
+// Сообщение со статусом
+export interface StatusEvent extends BaseStreamEvent {
+  type: 'status';
+  message: string;
+}
+
+// Сообщение с токеном (частью текста)
+export interface TokenEvent extends BaseStreamEvent {
+  type: 'token';
+  content: string;
+}
+
+// Полный ответ
+export interface AnswerEvent extends BaseStreamEvent {
+  type: 'answer';
+  content: string;
+}
+
+// Сообщение о завершении генерации
+export interface DoneEvent extends BaseStreamEvent {
+  type: 'done';
+  sources: Source[];
+  context_id: string;
+  reindexing_in_progress: boolean;
+}
+
+// Сообщение об ошибке
+export interface ErrorEvent extends BaseStreamEvent {
+  type: 'error';
+  message: string;
+  error_code?: string;
+}
+
+// Union Type для всех событий потока
+export type StreamEvent = StatusEvent | TokenEvent | AnswerEvent | DoneEvent | ErrorEvent;
+
+// Type guards для безопасной работы с событиями
+export function isStatusEvent(event: BaseStreamEvent): event is StatusEvent {
+  return event.type === 'status';
+}
+
+export function isTokenEvent(event: BaseStreamEvent): event is TokenEvent {
+  return event.type === 'token';
+}
+
+export function isAnswerEvent(event: BaseStreamEvent): event is AnswerEvent {
+  return event.type === 'answer';
+}
+
+export function isDoneEvent(event: BaseStreamEvent): event is DoneEvent {
+  return event.type === 'done';
+}
+
+export function isErrorEvent(event: BaseStreamEvent): event is ErrorEvent {
+  return event.type === 'error';
+}
+
+
+
+
+
+
+
+
 export interface CreateContext {
   success: boolean;
   message: string;
