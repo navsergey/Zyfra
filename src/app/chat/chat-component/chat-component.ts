@@ -237,7 +237,7 @@ export class ChatComponent {
         }
       }
 
-      this.chatService.QuestContext(messageText, requestContextId)
+      this.chatService.QuestContext(messageText, requestContextId , this.filterSearch)
         .pipe(
           tap(() => {
             // Устанавливаем флаг сразу после отправки запроса
@@ -308,7 +308,7 @@ export class ChatComponent {
               // Сохраняем сообщение в localStorage перед отправкой запроса
               localStorage.setItem(`${requestContextId}`, messageText);
 
-              this.chatService.QuestContext(messageText, requestContextId)
+              this.chatService.QuestContext(messageText, requestContextId ,this.filterSearch)
                 .subscribe({
                 next: (response) => {
                   // Проверяем, что пользователь всё ещё находится в том же контексте
