@@ -10,7 +10,7 @@ import {TokenResponse} from './auth.interface';
 export class AuthService {
   http = inject(HttpClient)
   cookieService = inject(CookieService) //Для вытягивания token из куков
-  baseApiUrl = 'http://localhost:53593/';
+  baseApiUrl = 'https://dev.study.dp.zyfra.com/';
 
   token: string | null = null;
   refreshtoken: string | null = null;

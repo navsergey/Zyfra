@@ -41,6 +41,8 @@ export class ChatComponent {
   pendingRequestContextIds = new Set<string>(); // Set контекстов, для которых выполняются запросы
   userTextFlag: boolean = false;
   healthStatus: string = 'unknown'; // Статус здоровья системы
+  selectedVersion: string = 'ZIOT_DOCS_220'; // По умолчанию ЗИОТ 2.20
+  filterSearch: string[] = []; // Массив includes из выбранной версии
 
   constructor() {
     this.loadContexts();
@@ -54,6 +56,8 @@ export class ChatComponent {
 
     this.chatService.getFilterRules().subscribe( val => {
       this.filters = val;
+      // Инициализируем filterSearch значением по умолчанию (ZIOT_DOCS_220)
+      this.updateFilterSearch();
     });
   }
 
@@ -146,12 +150,9 @@ export class ChatComponent {
             context_id: contextId,
             sources: sourcesWithPages.length > 0 ? sourcesWithPages : undefined
           });
-
-          console.log(`Turn ${index}: turn_index = ${index}, context_id = ${contextId}, question: "${turn.q.substring(0, 50)}...", sources: ${sourcesWithPages.length}`);
         });
       }
       this.chatHistory.set(messages);
-      console.log('ChatHistory с turn_index и context_id:', messages.filter(m => m.sender === 'assistant'));
 
       // Проверяем, есть ли сохраненное сообщение в localStorage (ожидающее ответа)
       const pendingMessage = localStorage.getItem(contextId);
@@ -293,16 +294,11 @@ export class ChatComponent {
           switchContexts$
             .pipe(
               tap((response) => {
-                console.log('tap() выполнился в компоненте! Response:', response);
-                // Восстанавливаем сообщение из localStorage после переключения контекста
                 const storedMessage = localStorage.getItem(newContextId);
-                console.log('storedMessage:', storedMessage);
-                console.log('this.userInput:', this.userInput);
               })
             )
             .subscribe({
             next: (response) => {
-              console.log('switchContexts next() выполнился! Response:', response);
               this.showWelcome = false;
 
 
@@ -310,19 +306,13 @@ export class ChatComponent {
               const requestContextId = newContextId;
 
               // Сохраняем сообщение в localStorage перед отправкой запроса
-              try {
-                localStorage.setItem(`${requestContextId}`, messageText);
-                console.log('Сохранение для нового контекста!');
-              } catch {
-                console.log('Ошибка сохранения в localStorage');
-              }
+              localStorage.setItem(`${requestContextId}`, messageText);
 
               this.chatService.QuestContext(messageText, requestContextId)
                 .subscribe({
                 next: (response) => {
                   // Проверяем, что пользователь всё ещё находится в том же контексте
                   if (this.selectedContextId !== requestContextId) {
-                    console.log('Ответ пришёл для другого контекста (новый), игнорируем');
                     return;
                   }
 
@@ -336,7 +326,6 @@ export class ChatComponent {
                 error: (error) => {
                   // Проверяем контекст даже при ошибке
                   if (this.selectedContextId !== requestContextId) {
-                    console.log('Ошибка пришла для другого контекста (новый), игнорируем');
                     return;
                   }
                   console.error('Ошибка при отправке вопроса:', error);
@@ -347,7 +336,6 @@ export class ChatComponent {
                   this.isRequestPending = this.pendingRequestContextIds.size > 0; // Обновляем флаг на основе наличия активных запросов
                   this.loadContexts(); // Обновляем список контекстов для обновления turn_count
                   localStorage.removeItem(requestContextId);
-                  console.log('localStorage был удалён для нового контекста!');
                 }
               });
             },
@@ -449,5 +437,26 @@ export class ChatComponent {
     });
   }
 
+  // Обработчик изменения выбора версии ЗИОТ
+  onVersionChange(): void {
+    this.updateFilterSearch();
+  }
+
+  // Обновление filterSearch на основе выбранной версии
+  private updateFilterSearch(): void {
+    if (!this.filters || !this.filters.filter_rules || !this.filters.filter_rules.button_rules) {
+      this.filterSearch = [];
+      return;
+    }
+
+    const buttonRule = this.filters.filter_rules.button_rules[this.selectedVersion];
+    if (buttonRule && buttonRule.includes) {
+      this.filterSearch = [...buttonRule.includes];
+      console.log(`Версия ${this.selectedVersion} выбрана. filterSearch:`, this.filterSearch);
+    } else {
+      this.filterSearch = [];
+      console.warn(`Правило для ${this.selectedVersion} не найдено или не содержит includes`);
+    }
+  }
 
 }

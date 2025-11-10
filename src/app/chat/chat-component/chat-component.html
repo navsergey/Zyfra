@@ -127,6 +127,16 @@
                     (keydown)="checkEnter($event)"
                     (input)="adjustHeight($event)"
                     [disabled]="hasActiveRequest(selectedContextId)"></textarea>
+                <select
+                    class="version-select"
+                    [(ngModel)]="selectedVersion"
+                    (change)="onVersionChange()"
+                    [disabled]="hasActiveRequest(selectedContextId)">
+                    <option value="ZIOT_DOCS_217">ЗИОТ 2.17</option>
+                    <option value="ZIOT_DOCS_218">ЗИОТ 2.18</option>
+                    <option value="ZIOT_DOCS_219">ЗИОТ 2.19</option>
+                    <option value="ZIOT_DOCS_220">ЗИОТ 2.20</option>
+                </select>
                 <button class="btn-send"
                         (click)="submitMessage()"
                         [disabled]="hasActiveRequest(selectedContextId)">

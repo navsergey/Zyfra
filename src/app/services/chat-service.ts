@@ -11,7 +11,6 @@ import {
 } from '../chat/interface/interface';
 import {Observable, catchError, of, map, throwError, tap} from 'rxjs';
 import {AuthService} from '../authpage/auth/auth';
-import {ADMIN_CONFIG} from '../config/admin-config';
 
 @Injectable({
   providedIn: 'root'
@@ -19,7 +18,7 @@ import {ADMIN_CONFIG} from '../config/admin-config';
 export class ChatService {
   http = inject(HttpClient)
   authService = inject(AuthService)
-  baseApiUrl = 'http://localhost:53593/';
+  baseApiUrl = 'https://dev.study.dp.zyfra.com/';
 
   private getAuthHeaders(): HttpHeaders {
     // Получаем токен из AuthService используя новый метод
@@ -87,10 +86,8 @@ export class ChatService {
 
   switchContexts(contextId:string): Observable<SwitchContext> {
     const headers = this.getAuthHeaders();
-    console.log('switchContexts вызван с contextId:', contextId);
 
     const request$ = this.http.post<SwitchContext>(`${this.baseApiUrl}contexts/${contextId}/activate`, {context_id: contextId}, { headers });
-    console.log('HTTP запрос создан для contextId:', contextId);
 
     return request$.pipe(
       catchError(error => {
@@ -106,10 +103,6 @@ export class ChatService {
         // Возвращаем пустой объект SwitchContext в случае ошибки
         return of({ context_id: contextId } as SwitchContext);
       }),
-      tap((response: SwitchContext) => {
-        console.log('switchContexts успешный ответ:', response);
-        console.log('tap() выполнился в сервисе!');
-      })
     );
   }
 
@@ -197,10 +190,8 @@ export class ChatService {
 
 
   getFilterRules(): Observable<FilterRulesResponse> {
-    const baseHeaders = this.getAuthHeaders();
+    const headers = this.getAuthHeaders();
     // Добавляем X-Admin-Key к существующим headers
-    const headers = baseHeaders.set(ADMIN_CONFIG.ADMIN_KEY_HEADER, ADMIN_CONFIG.ADMIN_KEY_VALUE);
-
     return this.http.get<FilterRulesResponse>(`${this.baseApiUrl}config/filter-rules`, { headers }).pipe(
       catchError(error => {
         console.error('Ошибка при получении правил фильтрации:', error);
