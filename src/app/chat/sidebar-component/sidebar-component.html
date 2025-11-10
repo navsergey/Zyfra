@@ -2,13 +2,13 @@
   <div class="brand">
     <div class="brand-logo">
       <div class="logo-symbol"></div>
-      <span class="brand-name">Цифра AI</span>
+      <span class="brand-name">Цифра GPT</span>
     </div>
     <div class="brand-tagline">Промышленный интеллект</div>
   </div>
 
   <div class="action-buttons">
-    <button class="btn-new-chat" 
+    <button class="btn-new-chat"
             (click)="createNewChat()"
             [disabled]="hasEmptyContext()">
       Новый диалог
@@ -24,7 +24,7 @@
                [class.active]="context.context_id === selectedContextId"
                (click)="selectContext(context)">
             <span class="history-item-title">{{ context.title }}</span>
-            <button class="delete-btn" 
+            <button class="delete-btn"
                     (click)="deleteContext($event, context.context_id)"
                     title="Удалить диалог">
               <svg viewBox="0 0 24 24" width="12" height="12">
