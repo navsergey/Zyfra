@@ -1,0 +1,53 @@
+<div class="offer-source-container">
+    <div class="offer-source-card">
+        <button class="card-close-btn" (click)="closeForm()">
+            <svg viewBox="0 0 24 24" width="20" height="20">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+        </button>
+        <div class="card-header">
+            <div class="header-icon">💡</div>
+            <h2 class="card-title">Предложить источник</h2>
+            <p class="card-description">Поделитесь полезным источником информации для улучшения базы знаний</p>
+        </div>
+
+        <form class="offer-form">
+            <div class="form-group">
+                <label class="form-label" for="sourceLink">Ссылка на источник</label>
+                <input 
+                    type="url" 
+                    id="sourceLink" 
+                    class="form-input" 
+                    placeholder="Прикрепить ссылку"
+                    required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="category">Категория</label>
+                <select id="category" class="form-select" required>
+                    <option value="" disabled selected>Выбрать категорию</option>
+                    <option value="documentation">Документация</option>
+                    <option value="confluence">Confluence</option>
+                    <option value="jira">Jira</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="comment">Комментарий</label>
+                <textarea 
+                    id="comment" 
+                    class="form-textarea" 
+                    placeholder="Комментарий"
+                    rows="4"
+                    required></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn">
+                <svg class="btn-icon" viewBox="0 0 24 24" width="18" height="18">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                </svg>
+                Отправить предложение
+            </button>
+        </form>
+    </div>
+</div>

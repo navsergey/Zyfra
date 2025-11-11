@@ -27,17 +27,17 @@
                     Помогаю с цифровизацией производства, анализом данных и автоматизацией процессов.
                 </p>
                 <div class="prompts-grid">
-                    <div class="prompt-card">
+                    <div class="prompt-card prompt-card-clickable" (click)="submitMessage('Расскажи о платформе ZIIoT')">
                         <div class="prompt-icon">🌐</div>
                         <div class="prompt-label">Платформа ZIIoT</div>
                         <div class="prompt-description">Расскажи о платформе ZIIoT</div>
                     </div>
-                    <div class="prompt-card">
+                    <div class="prompt-card prompt-card-clickable" (click)="submitMessage('Что такое Цифра. Конструктор MES')">
                         <div class="prompt-icon">🧩</div>
                         <div class="prompt-label">Цифра. Конструктор MES</div>
                         <div class="prompt-description">Что такое Цифра. Конструктор MES</div>
                     </div>
-                    <div class="prompt-card">
+                    <div class="prompt-card prompt-card-clickable" (click)="openOfferSourceModal()">
                         <div class="prompt-icon">💡</div>
                         <div class="prompt-label">Предложить источник</div>
                         <div class="prompt-description">Предложить источник по нужной теме</div>
@@ -147,4 +147,16 @@
             </div>
         </div>
     </main>
+
+    <!-- Модальное окно предложения источника -->
+    <div class="modal-overlay" *ngIf="showOfferSourceModal" (click)="closeOfferSourceModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <button class="modal-close-btn" (click)="closeOfferSourceModal()">
+                <svg viewBox="0 0 24 24" width="24" height="24">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                </svg>
+            </button>
+            <app-offer-source-component (close)="closeOfferSourceModal()"></app-offer-source-component>
+        </div>
+    </div>
 </div>

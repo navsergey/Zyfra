@@ -455,6 +455,15 @@
     transform: scaleY(1);
 }
 
+.prompt-card-clickable {
+    cursor: pointer;
+}
+
+.prompt-card-clickable:active {
+    transform: translateY(-3px);
+    transition: transform 0.1s;
+}
+
 .prompt-icon {
     font-size: 24px;
     margin-bottom: 12px;
@@ -668,5 +677,81 @@
 
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(128, 188, 72, 0.5);
+}
+
+/* Модальное окно */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.modal-content {
+    position: relative;
+    max-width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: -50px;
+    right: 0;
+    background: rgba(51, 63, 80, 0.9);
+    border: 2px solid rgba(128, 188, 72, 0.3);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    z-index: 1001;
+}
+
+.modal-close-btn svg {
+    fill: #F5F8FA;
+    transition: all 0.3s;
+}
+
+.modal-close-btn:hover {
+    background: rgba(51, 63, 80, 1);
+    border-color: #80bc48;
+    transform: rotate(90deg);
+}
+
+.modal-close-btn:hover svg {
+    fill: #80bc48;
 }
 

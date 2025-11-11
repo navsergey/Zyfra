@@ -20,10 +20,11 @@ import {toObservable} from '@angular/core/rxjs-interop';
 import {TextFormatterService} from '../../format-text/text-formatter.service';
 import {tap} from 'rxjs';
 import { trigger, transition, style, animate } from '@angular/animations';
+import {OfferSourceComponent} from '../../offer-source/offer-source-component/offer-source-component';
 
 @Component({
   selector: 'app-chat-component',
-  imports: [CommonModule, FormsModule, SidebarComponent, AsyncPipe],
+  imports: [CommonModule, FormsModule, SidebarComponent, AsyncPipe, OfferSourceComponent],
   templateUrl: './chat-component.html',
   styleUrl: './chat-component.scss',
   animations: [
@@ -55,6 +56,7 @@ export class ChatComponent {
   healthStatus: string = 'unknown'; // Статус здоровья системы
   selectedVersion: string = 'ZIOT_DOCS_220'; // По умолчанию ЗИОТ 2.20
   filterSearch: string[] = []; // Массив includes из выбранной версии
+  showOfferSourceModal: boolean = false; // Показать модальное окно предложения источника
 
   constructor() {
     this.loadContexts();
@@ -209,8 +211,8 @@ export class ChatComponent {
 
 
 
-  submitMessage(): void {
-    const messageText = this.userInput.trim();
+  submitMessage(promptText?: string): void {
+    const messageText = promptText ? promptText.trim() : this.userInput.trim();
     if (!messageText) return;
 
     // Проверяем, нет ли уже активного запроса для текущего контекста
@@ -572,6 +574,16 @@ export class ChatComponent {
       this.filterSearch = [];
       console.warn(`Правило для ${this.selectedVersion} не найдено или не содержит includes`);
     }
+  }
+
+  // Открыть модальное окно предложения источника
+  openOfferSourceModal(): void {
+    this.showOfferSourceModal = true;
+  }
+
+  // Закрыть модальное окно предложения источника
+  closeOfferSourceModal(): void {
+    this.showOfferSourceModal = false;
   }
 
 }
