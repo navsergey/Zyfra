@@ -185,3 +185,68 @@
 .btn-icon {
     fill: #0D0D0D;
 }
+
+.btn-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #0D0D0D;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.submit-btn:disabled {
+    background: linear-gradient(135deg, #5a7a32 0%, #7a8a38 100%);
+    cursor: not-allowed;
+    opacity: 0.6;
+    box-shadow: 0 2px 6px rgba(128, 188, 72, 0.15);
+    transform: none;
+}
+
+.submit-btn:disabled:hover {
+    transform: none;
+    box-shadow: 0 2px 6px rgba(128, 188, 72, 0.15);
+}
+
+// Алерты
+.alert {
+    padding: 14px 18px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    line-height: 1.5;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.alert-error {
+    background: rgba(184, 82, 82, 0.15);
+    border: 1px solid rgba(184, 82, 82, 0.4);
+    color: #f5a5a5;
+}
+
+.alert-success {
+    background: rgba(128, 188, 72, 0.15);
+    border: 1px solid rgba(128, 188, 72, 0.4);
+    color: #b8d24c;
+}
+
+.required {
+    color: #b85252;
+    margin-left: 4px;
+}

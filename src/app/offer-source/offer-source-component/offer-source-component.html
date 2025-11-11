@@ -11,21 +11,37 @@
             <p class="card-description">Поделитесь полезным источником информации для улучшения базы знаний</p>
         </div>
 
-        <form class="offer-form">
+        <form class="offer-form" (ngSubmit)="submitForm()">
+            <!-- Сообщения об ошибке и успехе -->
+            <div class="alert alert-error" *ngIf="submitError">
+                {{ submitError }}
+            </div>
+            <div class="alert alert-success" *ngIf="submitSuccess">
+                Источник успешно отправлен!
+            </div>
+
             <div class="form-group">
-                <label class="form-label" for="sourceLink">Ссылка на источник</label>
+                <label class="form-label" for="sourceLink">Ссылка на источник <span class="required">*</span></label>
                 <input 
                     type="url" 
                     id="sourceLink" 
+                    name="sourceLink"
                     class="form-input" 
                     placeholder="Прикрепить ссылку"
+                    [(ngModel)]="sourceLink"
+                    [disabled]="isSubmitting"
                     required>
             </div>
 
             <div class="form-group">
                 <label class="form-label" for="category">Категория</label>
-                <select id="category" class="form-select" required>
-                    <option value="" disabled selected>Выбрать категорию</option>
+                <select 
+                    id="category" 
+                    name="category"
+                    class="form-select"
+                    [(ngModel)]="category"
+                    [disabled]="isSubmitting">
+                    <option value="">Выбрать категорию</option>
                     <option value="documentation">Документация</option>
                     <option value="confluence">Confluence</option>
                     <option value="jira">Jira</option>
@@ -35,18 +51,21 @@
             <div class="form-group">
                 <label class="form-label" for="comment">Комментарий</label>
                 <textarea 
-                    id="comment" 
+                    id="comment"
+                    name="comment" 
                     class="form-textarea" 
                     placeholder="Комментарий"
                     rows="4"
-                    required></textarea>
+                    [(ngModel)]="comment"
+                    [disabled]="isSubmitting"></textarea>
             </div>
 
-            <button type="submit" class="submit-btn">
-                <svg class="btn-icon" viewBox="0 0 24 24" width="18" height="18">
+            <button type="submit" class="submit-btn" [disabled]="isSubmitting || !sourceLink">
+                <svg class="btn-icon" viewBox="0 0 24 24" width="18" height="18" *ngIf="!isSubmitting">
                     <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
                 </svg>
-                Отправить предложение
+                <span class="btn-spinner" *ngIf="isSubmitting"></span>
+                {{ isSubmitting ? 'Отправка...' : 'Отправить предложение' }}
             </button>
         </form>
     </div>
