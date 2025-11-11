@@ -484,16 +484,7 @@
     flex-shrink: 0;
 }
 
-.input-container::before {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: 40px;
-    width: 100px;
-    height: 2px;
-    background: #80bc48;
-    box-shadow: 0 0 12px rgba(128, 188, 72, 0.6);
-}
+
 
 .input-box-wrapper {
     display: flex;

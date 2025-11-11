@@ -131,10 +131,6 @@ export function isErrorEvent(event: BaseStreamEvent): event is ErrorEvent {
 
 
 
-
-
-
-
 export interface CreateContext {
   success: boolean;
   message: string;
@@ -172,4 +168,17 @@ export interface ButtonRule {
   default_active?: boolean;
   excludes?: string[];
   includes?: string[];
+}
+
+
+export interface OfferSourceRequest {
+  url: string;
+  category: string;
+  comment: string;
+}
+
+export interface OfferSourceResponce {
+  success: boolean;
+  message: string;
+  link_id: string;
 }

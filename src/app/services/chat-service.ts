@@ -9,7 +9,7 @@ import {
   SwitchContext,
   TurnResponse,
   StreamEvent,
-  ErrorEvent
+  ErrorEvent, OfferSourceResponce, OfferSourceRequest
 } from '../chat/interface/interface';
 import {Observable, catchError, of, map, throwError, tap, Observer} from 'rxjs';
 import {AuthService} from '../authpage/auth/auth';
@@ -142,7 +142,7 @@ export class ChatService {
 
   QuestStreamContext(question: string, contextId: string, active_source: string[]): Observable<StreamEvent> {
     const token = this.authService.getToken();
-    
+
     // Создаем объект запроса с правильным интерфейсом
     const request: QueryRequest = {
       context_id: contextId,
@@ -189,25 +189,25 @@ export class ChatService {
 
               // Декодируем чанк данных
               buffer += decoder.decode(value, { stream: true });
-              
+
               // Разбиваем буфер на строки
               const lines = buffer.split('\n');
-              
+
               // Оставляем последнюю (возможно неполную) строку в буфере
               buffer = lines.pop() || '';
 
               // Обрабатываем каждую строку
               for (const line of lines) {
                 const trimmedLine = line.trim();
-                
+
                 // SSE формат: "data: {...}"
                 if (trimmedLine.startsWith('data: ')) {
                   const jsonStr = trimmedLine.substring(6); // Убираем "data: "
-                  
+
                   try {
                     const event = JSON.parse(jsonStr) as StreamEvent;
                     observer.next(event);
-                    
+
                     // Если получили событие 'done', завершаем поток
                     if (event.type === 'done') {
                       observer.complete();
@@ -239,7 +239,7 @@ export class ChatService {
         })
         .catch(error => {
           console.error('Ошибка при отправке запроса:', error);
-          
+
           // Отправляем событие ошибки
           const errorEvent: ErrorEvent = {
             type: 'error',
@@ -372,4 +372,37 @@ export class ChatService {
       })
     );
   }
+
+
+  OfferSource(url: string, category: string | null, comment: string | null): Observable<OfferSourceResponce> {
+    const headers = this.getAuthHeaders();
+
+    const request: OfferSourceRequest = {
+      url: url,
+      category: category || '',
+      comment: comment || ''
+    };
+
+    return this.http.post<OfferSourceResponce>(`${this.baseApiUrl}sources/offer`, request, { headers }).pipe(
+      catchError(error => {
+        console.error('Ошибка при отправке обратной связи:', error);
+        console.error('Статус ошибки:', error.status);
+        console.error('Сообщение ошибки:', error.message);
+
+        // Если 403, возможно проблема с авторизацией
+        if (error.status === 403) {
+          console.error('403 Forbidden - проверьте токен авторизации');
+        }
+
+        // Возвращаем объект с ошибкой
+        return of({
+            success: false,
+            message: '',
+            link_id: '',
+        });
+      })
+    );
+  }
+
+
 }
