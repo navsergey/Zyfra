@@ -52,7 +52,10 @@ export class ChatComponent {
   currentDialog: TurnResponse | null = null;
   isRequestPending: boolean = false;
   pendingRequestContextIds = new Set<string>(); // Set контекстов, для которых выполняются запросы
+  loadingIndicatorContextIds = new Set<string>(); // Set контекстов, для которых показывается анимация загрузки
   userTextFlag: boolean = false;
+  autoScrollEnabled: boolean = true; // Флаг для управления автоматической прокруткой
+  scrollHandler: ((event: Event) => void) | null = null; // Ссылка на обработчик скролла
   healthStatus: string = 'unknown'; // Статус здоровья системы
   selectedVersion: string = 'ZIOT_DOCS_220'; // По умолчанию ЗИОТ 2.20
   filterSearch: string[] = []; // Массив includes из выбранной версии
@@ -61,6 +64,7 @@ export class ChatComponent {
   constructor() {
     this.loadContexts();
     this.checkHealth();
+    this.setupScrollHandler();
   }
 
   private loadContexts(): void {
@@ -80,6 +84,24 @@ export class ChatComponent {
       this.healthStatus = health.status;
       console.log('Health status:', this.healthStatus);
     });
+  }
+
+  private setupScrollHandler(): void {
+    // Настраиваем обработчик скролла после инициализации DOM
+    setTimeout(() => {
+      const chatContainer = document.getElementById('chatMessages');
+      if (chatContainer) {
+        this.scrollHandler = () => {
+          this.handleScroll(chatContainer);
+        };
+        chatContainer.addEventListener('scroll', this.scrollHandler);
+      }
+    }, 100);
+  }
+
+  private handleScroll(container: HTMLElement): void {
+    // При любом ручном скролле пользователя отключаем автоскролл
+    this.autoScrollEnabled = false;
   }
 
   onContextSelected(contextId: string): void {
@@ -110,6 +132,8 @@ export class ChatComponent {
     // Переключение на существующий контекст
     this.chatService.switchContexts(contextId).subscribe();
     this.selectedContextId = contextId;
+    // Включаем автоскролл при переключении контекста, чтобы показать актуальные сообщения
+    this.autoScrollEnabled = true;
     this.loadDialog(contextId);
   }
 
@@ -134,6 +158,16 @@ export class ChatComponent {
         console.error('Ошибка при удалении контекста:', error);
       }
     });
+  }
+
+  onHomeRequested(): void {
+    // Переход на главную страницу - показываем welcome экран
+    this.showWelcome = true;
+    this.chatHistory.set([]);
+    this.currentDialog = null;
+    this.selectedContextId = '';
+    // Включаем автоскролл для нового диалога
+    this.autoScrollEnabled = true;
   }
 
   private loadDialog(contextId: string): void {
@@ -182,13 +216,27 @@ export class ChatComponent {
         ]);
       }
 
-      // Прокручиваем к последнему сообщению
-      setTimeout(() => {
+      // Прокручиваем к последнему сообщению (только если включен автоскролл)
+      if (this.autoScrollEnabled) {
+        // Временно отключаем обработчик скролла
         const container = document.getElementById('chatMessages');
-        if (container) {
-          container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+        if (container && this.scrollHandler) {
+          container.removeEventListener('scroll', this.scrollHandler);
         }
-      }, 100);
+        
+        setTimeout(() => {
+          if (container) {
+            container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+            
+            // Включаем обработчик обратно через небольшую задержку
+            setTimeout(() => {
+              if (container && this.scrollHandler) {
+                container.addEventListener('scroll', this.scrollHandler);
+              }
+            }, 300);
+          }
+        }, 100);
+      }
     });
   }
 
@@ -221,6 +269,9 @@ export class ChatComponent {
       return;
     }
 
+    // Включаем автоскролл при отправке нового сообщения
+    this.autoScrollEnabled = true;
+
     // Используйте строку для временной метки
     this.appendMessage('user', messageText, 0);
     this.userInput = '';
@@ -239,6 +290,7 @@ export class ChatComponent {
 
       this.isRequestPending = true;
       this.pendingRequestContextIds.add(requestContextId); // Добавляем контекст в список активных запросов
+      this.loadingIndicatorContextIds.add(requestContextId); // Добавляем контекст для показа анимации загрузки
       this.scrollToBottom(); // Прокручиваем к индикатору загрузки
 
       if (!this.userTextFlag) {
@@ -264,11 +316,14 @@ export class ChatComponent {
             }
 
             if (isTokenEvent(event)) {
-              // При получении первого токена убираем индикатор загрузки
+              // При получении первого токена убираем анимацию загрузки, но НЕ разблокируем кнопку
               if (!firstTokenReceived) {
                 firstTokenReceived = true;
-                this.pendingRequestContextIds.delete(requestContextId);
-                this.isRequestPending = this.pendingRequestContextIds.size > 0;
+                // Убираем анимацию загрузки при получении первого токена
+                this.loadingIndicatorContextIds.delete(requestContextId);
+                // Но оставляем кнопку заблокированной до полного завершения
+                // this.pendingRequestContextIds.delete(requestContextId);
+                // this.isRequestPending = this.pendingRequestContextIds.size > 0;
               }
 
               // Постепенно добавляем токены к ответу
@@ -276,11 +331,14 @@ export class ChatComponent {
               this.updateLastAssistantMessage(accumulatedText, requestContextId);
 
             } else if (isAnswerEvent(event)) {
-              // При получении полного ответа убираем индикатор загрузки
+              // При получении полного ответа убираем анимацию загрузки, но НЕ разблокируем кнопку
               if (!firstTokenReceived) {
                 firstTokenReceived = true;
-                this.pendingRequestContextIds.delete(requestContextId);
-                this.isRequestPending = this.pendingRequestContextIds.size > 0;
+                // Убираем анимацию загрузки при получении полного ответа
+                this.loadingIndicatorContextIds.delete(requestContextId);
+                // Но оставляем кнопку заблокированной до полного завершения
+                // this.pendingRequestContextIds.delete(requestContextId);
+                // this.isRequestPending = this.pendingRequestContextIds.size > 0;
               }
 
               // Получили полный ответ сразу
@@ -288,8 +346,11 @@ export class ChatComponent {
               this.updateLastAssistantMessage(accumulatedText, requestContextId);
 
             } else if (isDoneEvent(event)) {
-              // Завершение - добавляем источники
+              // Завершение - добавляем источники и разблокируем кнопку
               this.finalizeLastAssistantMessage(event.sources, event.context_id);
+              // Разблокируем кнопку только при полном завершении ответа
+              this.pendingRequestContextIds.delete(requestContextId);
+              this.isRequestPending = this.pendingRequestContextIds.size > 0;
 
             } else if (isStatusEvent(event)) {
               // Статусное сообщение
@@ -304,12 +365,14 @@ export class ChatComponent {
             }
             console.error('Ошибка при отправке вопроса:', error);
             this.appendMessage('assistant', 'Извините, произошла ошибка при обработке вашего вопроса.', Date.now());
-            // Убираем индикатор загрузки при ошибке
+            // Убираем индикатор загрузки и разблокируем кнопку при ошибке
+            this.loadingIndicatorContextIds.delete(requestContextId);
             this.pendingRequestContextIds.delete(requestContextId);
             this.isRequestPending = this.pendingRequestContextIds.size > 0;
           },
           complete: () => {
             // На случай если firstTokenReceived не сработал (например, только done без токенов)
+            this.loadingIndicatorContextIds.delete(requestContextId);
             this.pendingRequestContextIds.delete(requestContextId);
             this.isRequestPending = this.pendingRequestContextIds.size > 0;
             this.loadContexts();
@@ -322,12 +385,15 @@ export class ChatComponent {
 
       // Создаем новый контекст, переключаемся на него, скрываем welcome и отправляем вопрос
       this.isRequestPending = true;
+      // Включаем автоскролл при создании нового контекста
+      this.autoScrollEnabled = true;
       this.scrollToBottom(); // Прокручиваем к индикатору загрузки
       this.chatService.createContext().subscribe({
         next: (newContextId: string) => {
           this.loadContexts();
           this.selectedContextId = newContextId;
           this.pendingRequestContextIds.add(newContextId); // Добавляем контекст в список активных запросов
+          this.loadingIndicatorContextIds.add(newContextId); // Добавляем контекст для показа анимации загрузки
 
           const switchContexts$ = this.chatService.switchContexts(newContextId);
           switchContexts$
@@ -360,11 +426,14 @@ export class ChatComponent {
                     }
 
                     if (isTokenEvent(event)) {
-                      // При получении первого токена убираем индикатор загрузки
+                      // При получении первого токена убираем анимацию загрузки, но НЕ разблокируем кнопку
                       if (!firstTokenReceived) {
                         firstTokenReceived = true;
-                        this.pendingRequestContextIds.delete(requestContextId);
-                        this.isRequestPending = this.pendingRequestContextIds.size > 0;
+                        // Убираем анимацию загрузки при получении первого токена
+                        this.loadingIndicatorContextIds.delete(requestContextId);
+                        // Но оставляем кнопку заблокированной до полного завершения
+                        // this.pendingRequestContextIds.delete(requestContextId);
+                        // this.isRequestPending = this.pendingRequestContextIds.size > 0;
                       }
 
                       // Постепенно добавляем токены к ответу
@@ -372,11 +441,14 @@ export class ChatComponent {
                       this.updateLastAssistantMessage(accumulatedText, requestContextId);
 
                     } else if (isAnswerEvent(event)) {
-                      // При получении полного ответа убираем индикатор загрузки
+                      // При получении полного ответа убираем анимацию загрузки, но НЕ разблокируем кнопку
                       if (!firstTokenReceived) {
                         firstTokenReceived = true;
-                        this.pendingRequestContextIds.delete(requestContextId);
-                        this.isRequestPending = this.pendingRequestContextIds.size > 0;
+                        // Убираем анимацию загрузки при получении полного ответа
+                        this.loadingIndicatorContextIds.delete(requestContextId);
+                        // Но оставляем кнопку заблокированной до полного завершения
+                        // this.pendingRequestContextIds.delete(requestContextId);
+                        // this.isRequestPending = this.pendingRequestContextIds.size > 0;
                       }
 
                       // Получили полный ответ сразу
@@ -384,8 +456,11 @@ export class ChatComponent {
                       this.updateLastAssistantMessage(accumulatedText, requestContextId);
 
                     } else if (isDoneEvent(event)) {
-                      // Завершение - добавляем источники
+                      // Завершение - добавляем источники и разблокируем кнопку
                       this.finalizeLastAssistantMessage(event.sources, event.context_id);
+                      // Разблокируем кнопку только при полном завершении ответа
+                      this.pendingRequestContextIds.delete(requestContextId);
+                      this.isRequestPending = this.pendingRequestContextIds.size > 0;
 
                     } else if (isStatusEvent(event)) {
                       // Статусное сообщение
@@ -400,12 +475,14 @@ export class ChatComponent {
                     }
                     console.error('Ошибка при отправке вопроса:', error);
                     this.appendMessage('assistant', 'Извините, произошла ошибка при обработке вашего вопроса.', Date.now());
-                    // Убираем индикатор загрузки при ошибке
+                    // Убираем индикатор загрузки и разблокируем кнопку при ошибке
+                    this.loadingIndicatorContextIds.delete(requestContextId);
                     this.pendingRequestContextIds.delete(requestContextId);
                     this.isRequestPending = this.pendingRequestContextIds.size > 0;
                   },
                   complete: () => {
                     // На случай если firstTokenReceived не сработал (например, только done без токенов)
+                    this.loadingIndicatorContextIds.delete(requestContextId);
                     this.pendingRequestContextIds.delete(requestContextId);
                     this.isRequestPending = this.pendingRequestContextIds.size > 0;
                     this.loadContexts();
@@ -417,6 +494,7 @@ export class ChatComponent {
               console.error('Ошибка при переключении контекста:', error);
               this.appendMessage('assistant', 'Ошибка при создании нового диалога.', Date.now());
               const newContextId = this.selectedContextId;
+              this.loadingIndicatorContextIds.delete(newContextId); // Удаляем анимацию загрузки
               this.pendingRequestContextIds.delete(newContextId); // Удаляем контекст из списка активных запросов
               this.isRequestPending = this.pendingRequestContextIds.size > 0;
             }
@@ -427,6 +505,7 @@ export class ChatComponent {
           this.appendMessage('assistant', 'Ошибка при создании нового диалога.', Date.now());
           const newContextId = this.selectedContextId;
           if (newContextId) {
+            this.loadingIndicatorContextIds.delete(newContextId); // Удаляем анимацию загрузки
             this.pendingRequestContextIds.delete(newContextId); // Удаляем контекст из списка активных запросов
           }
           this.isRequestPending = this.pendingRequestContextIds.size > 0;
@@ -447,8 +526,10 @@ export class ChatComponent {
       sources: sourcesWithPages && sourcesWithPages.length > 0 ? sourcesWithPages : undefined
     }]);
 
-    // Автоматическая прокрутка вниз
-    this.scrollToBottom();
+    // Автоматическая прокрутка вниз (только если включен автоскролл)
+    if (this.autoScrollEnabled) {
+      this.scrollToBottom();
+    }
   }
 
   // Обновление последнего сообщения ассистента (для потокового ответа)
@@ -473,7 +554,9 @@ export class ChatComponent {
         }];
       }
     });
-    this.scrollToBottom();
+    if (this.autoScrollEnabled) {
+      this.scrollToBottom();
+    }
   }
 
   // Финализация последнего сообщения (добавление источников, context_id и turn_index)
@@ -485,7 +568,7 @@ export class ChatComponent {
       if (lastMessage?.sender === 'assistant') {
         lastMessage.sources = sourcesWithPages && sourcesWithPages.length > 0 ? sourcesWithPages : undefined;
         lastMessage.context_id = contextId;
-        
+
         // Вычисляем turn_index: это количество ответов ассистента в истории минус 1 (текущее сообщение)
         const assistantMessagesCount = messages.filter(m => m.sender === 'assistant').length;
         lastMessage.turn_index = assistantMessagesCount - 1;
@@ -495,10 +578,27 @@ export class ChatComponent {
   }
 
   private scrollToBottom(): void {
+    // Прокручиваем только если автоскролл включен
+    if (!this.autoScrollEnabled) {
+      return;
+    }
+    
+    // Временно отключаем обработчик скролла
+    const container = document.getElementById('chatMessages');
+    if (container && this.scrollHandler) {
+      container.removeEventListener('scroll', this.scrollHandler);
+    }
+    
     setTimeout(() => {
-      const container = document.getElementById('chatMessages');
       if (container) {
         container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+        
+        // Включаем обработчик обратно через небольшую задержку
+        setTimeout(() => {
+          if (container && this.scrollHandler) {
+            container.addEventListener('scroll', this.scrollHandler);
+          }
+        }, 300);
       }
     }, 100);
   }
@@ -523,6 +623,11 @@ export class ChatComponent {
   // Проверяет, есть ли активный запрос для данного контекста
   hasActiveRequest(contextId: string): boolean {
     return this.pendingRequestContextIds.has(contextId);
+  }
+
+  // Проверяет, нужно ли показывать анимацию загрузки для данного контекста
+  hasLoadingIndicator(contextId: string): boolean {
+    return this.loadingIndicatorContextIds.has(contextId);
   }
 
   // Отправка обратной связи (Like/Dislike)

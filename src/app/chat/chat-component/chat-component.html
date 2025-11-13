@@ -5,7 +5,8 @@
       [selectedContextId]="selectedContextId"
       [pendingRequestContextIds]="pendingRequestContextIds"
       (contextSelected)="onContextSelected($event)"
-      (contextDeleted)="onContextDeleted($event)">
+      (contextDeleted)="onContextDeleted($event)"
+      (homeRequested)="onHomeRequested()">
     </app-sidebar-component>
     <!-- Правая область -->
     <main class="chat-area">
@@ -102,7 +103,7 @@
             </div>
 
             <!-- Индикатор загрузки -->
-            <div class="chat-message assistant loading-message" *ngIf="hasActiveRequest(selectedContextId)" @fadeInOut>
+            <div class="chat-message assistant loading-message" *ngIf="hasLoadingIndicator(selectedContextId)" @fadeInOut>
                 <div class="message-icon">AI</div>
                 <div class="message-body">
                     <div class="message-bubble loading-bubble">

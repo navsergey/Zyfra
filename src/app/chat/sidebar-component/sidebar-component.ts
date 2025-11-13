@@ -15,6 +15,7 @@ export class SidebarComponent {
   @Input() pendingRequestContextIds!: Set<string>; // Set контекстов с активными запросами
   @Output() contextSelected = new EventEmitter<string>(); // Событие выбора контекста
   @Output() contextDeleted = new EventEmitter<string>(); // Событие удаления контекста
+  @Output() homeRequested = new EventEmitter<void>(); // Событие перехода на главную
 
 
   createNewChat(): void {
@@ -24,6 +25,11 @@ export class SidebarComponent {
       return;
     }
     this.contextSelected.emit(''); // Сбрасываем выбранный контекст
+  }
+
+  goToHome(): void {
+    // Переход на главную страницу (показать welcome экран)
+    this.homeRequested.emit();
   }
 
   selectContext(context: Context): void {
