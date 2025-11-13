@@ -196,7 +196,8 @@ export class ChatComponent {
             ts: turn.ts,
             turn_index: index, // Индекс в массиве turns
             context_id: contextId,
-            sources: sourcesWithPages.length > 0 ? sourcesWithPages : undefined
+            sources: sourcesWithPages.length > 0 ? sourcesWithPages : undefined,
+            feedback_type: turn.feedback_type
           });
         });
       }
@@ -223,11 +224,11 @@ export class ChatComponent {
         if (container && this.scrollHandler) {
           container.removeEventListener('scroll', this.scrollHandler);
         }
-        
+
         setTimeout(() => {
           if (container) {
             container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-            
+
             // Включаем обработчик обратно через небольшую задержку
             setTimeout(() => {
               if (container && this.scrollHandler) {
@@ -582,17 +583,17 @@ export class ChatComponent {
     if (!this.autoScrollEnabled) {
       return;
     }
-    
+
     // Временно отключаем обработчик скролла
     const container = document.getElementById('chatMessages');
     if (container && this.scrollHandler) {
       container.removeEventListener('scroll', this.scrollHandler);
     }
-    
+
     setTimeout(() => {
       if (container) {
         container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-        
+
         // Включаем обработчик обратно через небольшую задержку
         setTimeout(() => {
           if (container && this.scrollHandler) {
@@ -634,9 +635,66 @@ export class ChatComponent {
   sendFeedback(contextId: string, turn_index: number, feedback_type: string): void {
     console.log(`Отправка обратной связи: contextId=${contextId}, turn_index=${turn_index}, type=${feedback_type}`);
 
+    // Находим текущее сообщение для проверки существующего feedback_type
+    const currentMessage = this.chatHistory().find(message =>
+      message.sender === 'assistant' &&
+      message.context_id === contextId &&
+      message.turn_index === turn_index
+    );
+
+    const currentFeedbackType = currentMessage?.feedback_type;
+
+    // Если уже есть feedback, сначала удаляем его
+    if (currentFeedbackType && currentFeedbackType !== '' && currentFeedbackType !== feedback_type) {
+      let deleteFeedbackType: string;
+
+      if (currentFeedbackType === 'like') {
+        deleteFeedbackType = 'delete_like';
+      } else if (currentFeedbackType === 'dislike') {
+        deleteFeedbackType = 'delete_dislike';
+      } else {
+        // Если текущий тип неизвестен, просто устанавливаем новый
+        this.setFeedback(contextId, turn_index, feedback_type);
+        return;
+      }
+
+      console.log(`Удаление существующего feedback: ${deleteFeedbackType}`);
+
+      // Сначала удаляем существующий feedback
+      this.chatService.Feedback(contextId, turn_index, deleteFeedbackType).subscribe({
+        next: (response) => {
+          console.log('Существующий feedback удален успешно:', response);
+
+          // После успешного удаления устанавливаем новый feedback
+          this.setFeedback(contextId, turn_index, feedback_type);
+        },
+        error: (error) => {
+          console.error('Ошибка при удалении существующего feedback:', error);
+        }
+      });
+    } else {
+      // Если feedback пустой или такой же, просто устанавливаем новый
+      this.setFeedback(contextId, turn_index, feedback_type);
+    }
+  }
+
+  // Вспомогательный метод для установки feedback
+  private setFeedback(contextId: string, turn_index: number, feedback_type: string): void {
     this.chatService.Feedback(contextId, turn_index, feedback_type).subscribe({
       next: (response) => {
         console.log('Обратная связь отправлена успешно:', response);
+
+        // Обновляем feedback_type в локальном состоянии сообщения
+        this.chatHistory.update(messages => {
+          return messages.map(message => {
+            if (message.sender === 'assistant' &&
+                message.context_id === contextId &&
+                message.turn_index === turn_index) {
+              return { ...message, feedback_type: feedback_type };
+            }
+            return message;
+          });
+        });
       },
       error: (error) => {
         console.error('Ошибка при отправке обратной связи:', error);

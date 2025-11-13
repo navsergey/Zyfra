@@ -275,6 +275,34 @@
     transform: translateY(0);
 }
 
+/* Активные состояния кнопок обратной связи */
+.like-btn.active {
+    background: rgba(128, 188, 72, 0.2) !important;
+    border-color: #80bc48 !important;
+    color: #80bc48 !important;
+    box-shadow: 0 4px 12px rgba(128, 188, 72, 0.3) !important;
+    transform: none !important;
+}
+
+.dislike-btn.active {
+    background: rgba(184, 82, 82, 0.2) !important;
+    border-color: #b85252 !important;
+    color: #b85252 !important;
+    box-shadow: 0 4px 12px rgba(184, 82, 82, 0.3) !important;
+    transform: none !important;
+}
+
+/* Активные кнопки при hover - сохраняем активное состояние */
+.like-btn.active:hover {
+    background: rgba(128, 188, 72, 0.3) !important;
+    transform: translateY(-1px) !important;
+}
+
+.dislike-btn.active:hover {
+    background: rgba(184, 82, 82, 0.3) !important;
+    transform: translateY(-1px) !important;
+}
+
 /* Иконки источников */
 .source-icons {
     display: flex;

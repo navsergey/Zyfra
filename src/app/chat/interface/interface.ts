@@ -5,6 +5,7 @@ export interface ChatMessage {
   turn_index?: number; // Индекс сообщения в массиве turns (только для ассистента)
   context_id?: string; // ID контекста (только для ассистента)
   sources?: Source[]; // Источники для сообщений ассистента
+  feedback_type?: string; // Тип обратной связи (только для ассистента)
 }
 
 export interface Context {
@@ -46,6 +47,7 @@ export interface AddProp{
   a: string;
   sources: Source[];
   ts: number;
+  feedback_type: string;
 }
 
 export interface SwitchContext{

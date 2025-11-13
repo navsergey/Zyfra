@@ -78,6 +78,7 @@
                     <!-- Кнопки обратной связи для ассистента -->
                     <div class="feedback-buttons" *ngIf="message.sender === 'assistant' && message.turn_index !== undefined && message.context_id">
                         <button class="feedback-btn like-btn"
+                                [class.active]="message.feedback_type === 'like'"
                                 (click)="sendFeedback(message.context_id!, message.turn_index!, 'like')"
                                 title="Полезный ответ">
                             <svg viewBox="0 0 24 24" width="16" height="16">
@@ -85,6 +86,7 @@
                             </svg>
                         </button>
                         <button class="feedback-btn dislike-btn"
+                                [class.active]="message.feedback_type === 'dislike'"
                                 (click)="sendFeedback(message.context_id!, message.turn_index!, 'dislike')"
                                 title="Не помог">
                             <svg viewBox="0 0 24 24" width="16" height="16">
