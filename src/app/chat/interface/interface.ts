@@ -58,6 +58,7 @@ export interface QueryRequest {
   context_id: string;
   question: string;
   active_sources: string[];
+  web_search_active?: boolean
 }
 
 export interface QueryResponse {

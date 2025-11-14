@@ -60,6 +60,7 @@ export class ChatComponent {
   selectedVersion: string = 'ZIOT_DOCS_220'; // По умолчанию ЗИОТ 2.20
   showOfferSourceModal: boolean = false; // Показать модальное окно предложения источника
   filterSearch: string[] = []; // Массив includes из выбранной версии
+  webSearchActive: boolean = false;
 
   constructor() {
     this.loadContexts();
@@ -299,7 +300,7 @@ export class ChatComponent {
       let accumulatedText = '';
       let firstTokenReceived = false;
 
-      this.chatService.QuestStreamContext(messageText, requestContextId, this.filterSearch)
+      this.chatService.QuestStreamContext(messageText, requestContextId, this.filterSearch, this.webSearchActive)
         .pipe(
           tap(() => {
             // Устанавливаем флаг сразу после отправки запроса
@@ -415,7 +416,7 @@ export class ChatComponent {
               let accumulatedText = '';
               let firstTokenReceived = false;
 
-              this.chatService.QuestStreamContext(messageText, requestContextId, this.filterSearch)
+              this.chatService.QuestStreamContext(messageText, requestContextId, this.filterSearch, this.webSearchActive)
                 .subscribe({
                   next: (event: StreamEvent) => {
                     // Проверяем, что пользователь всё ещё находится в том же контексте
@@ -747,6 +748,12 @@ export class ChatComponent {
   // Закрыть модальное окно предложения источника
   closeOfferSourceModal(): void {
     this.showOfferSourceModal = false;
+  }
+
+  // Переключение веб-поиска
+  toggleWebSearch(): void {
+    this.webSearchActive = !this.webSearchActive;
+    console.log('Веб-поиск:', this.webSearchActive ? 'включен' : 'выключен');
   }
 
 }

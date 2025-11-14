@@ -121,6 +121,13 @@
 
         <div class="input-container">
             <div class="input-box-wrapper">
+                <button class="web-search-btn"
+                        [class.active]="webSearchActive"
+                        (click)="toggleWebSearch()"
+                        [disabled]="hasActiveRequest(selectedContextId)"
+                        title="Включить/выключить веб-поиск">
+                    <span class="globe-icon">🌐</span>
+                </button>
                 <textarea
                     class="text-input"
                     id="userInput"

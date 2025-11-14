@@ -46,15 +46,15 @@ export class TextFormatterService {
       return text;
     }
 
-    // Удаляем текст, начинающийся с "[Документ" или "Источники:" до конца
-    const documentIndex = text.indexOf('[Документ');
+    // Удаляем текст от "[Документ" до "]" включительно и "Источники:" до конца
+    // Удаляем все вхождения [Документ...] блоков
+    const documentPattern = /\[Документ[^\]]*\]/g;
+    text = text.replace(documentPattern, '');
+    
+    // Удаляем текст от "Источники:" до конца
     const sourcesIndex = text.indexOf('Источники:');
-
-    // Находим минимальный индекс (самый ранний маркер)
-    const indices = [documentIndex, sourcesIndex].filter(index => index !== -1);
-    if (indices.length > 0) {
-      const minIndex = Math.min(...indices);
-      text = text.substring(0, minIndex).trim();
+    if (sourcesIndex !== -1) {
+      text = text.substring(0, sourcesIndex).trim();
     }
 
     // Сначала обрабатываем экранированные символы
