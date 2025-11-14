@@ -108,14 +108,14 @@ export class ChatService {
     );
   }
 
-  QuestContext(question: string, contextId: string, active_source: string[]): Observable<QueryResponse> {
+  QuestContext(question: string, contextId: string, active_sources: string[]): Observable<QueryResponse> {
     const headers = this.getAuthHeaders();
 
     // Создаем объект запроса с правильным интерфейсом
     const request: QueryRequest = {
       context_id: contextId,
       question: question,
-      active_source: active_source
+      active_sources: active_sources
     };
 
     return this.http.post<QueryResponse>(`${this.baseApiUrl}query`, request, { headers }).pipe(
@@ -140,14 +140,14 @@ export class ChatService {
   }
 
 
-  QuestStreamContext(question: string, contextId: string, active_source: string[]): Observable<StreamEvent> {
+  QuestStreamContext(question: string, contextId: string, active_sources: string[]): Observable<StreamEvent> {
     const token = this.authService.getToken();
 
     // Создаем объект запроса с правильным интерфейсом
     const request: QueryRequest = {
       context_id: contextId,
       question: question,
-      active_source: active_source
+      active_sources: active_sources
     };
 
     return new Observable<StreamEvent>((observer: Observer<StreamEvent>) => {

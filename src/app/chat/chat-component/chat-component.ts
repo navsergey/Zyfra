@@ -58,7 +58,6 @@ export class ChatComponent {
   scrollHandler: ((event: Event) => void) | null = null; // Ссылка на обработчик скролла
   healthStatus: string = 'unknown'; // Статус здоровья системы
   selectedVersion: string = 'ZIOT_DOCS_220'; // По умолчанию ЗИОТ 2.20
-  filterSearch: string[] = []; // Массив includes из выбранной версии
   showOfferSourceModal: boolean = false; // Показать модальное окно предложения источника
 
   constructor() {
@@ -70,12 +69,6 @@ export class ChatComponent {
   private loadContexts(): void {
     this.chatService.getContexts().subscribe( val => {
       this.contexts = val;
-    });
-
-    this.chatService.getFilterRules().subscribe( val => {
-      this.filters = val;
-      // Инициализируем filterSearch значением по умолчанию (ZIOT_DOCS_220)
-      this.updateFilterSearch();
     });
   }
 
@@ -299,7 +292,7 @@ export class ChatComponent {
       let accumulatedText = '';
       let firstTokenReceived = false;
 
-      this.chatService.QuestStreamContext(messageText, requestContextId, this.filterSearch)
+      this.chatService.QuestStreamContext(messageText, requestContextId, [this.selectedVersion])
         .pipe(
           tap(() => {
             // Устанавливаем флаг сразу после отправки запроса
@@ -415,7 +408,7 @@ export class ChatComponent {
               let accumulatedText = '';
               let firstTokenReceived = false;
 
-              this.chatService.QuestStreamContext(messageText, requestContextId, this.filterSearch)
+              this.chatService.QuestStreamContext(messageText, requestContextId, [this.selectedVersion])
                 .subscribe({
                   next: (event: StreamEvent) => {
                     // Проверяем, что пользователь всё ещё находится в том же контексте
@@ -715,28 +708,6 @@ export class ChatComponent {
     }).catch(err => {
       console.error('Ошибка при копировании текста:', err);
     });
-  }
-
-  // Обработчик изменения выбора версии ЗИОТ
-  onVersionChange(): void {
-    this.updateFilterSearch();
-  }
-
-  // Обновление filterSearch на основе выбранной версии
-  private updateFilterSearch(): void {
-    if (!this.filters || !this.filters.filter_rules || !this.filters.filter_rules.button_rules) {
-      this.filterSearch = [];
-      return;
-    }
-
-    const buttonRule = this.filters.filter_rules.button_rules[this.selectedVersion];
-    if (buttonRule && buttonRule.includes) {
-      this.filterSearch = [...buttonRule.includes];
-      console.log(`Версия ${this.selectedVersion} выбрана. filterSearch:`, this.filterSearch);
-    } else {
-      this.filterSearch = [];
-      console.warn(`Правило для ${this.selectedVersion} не найдено или не содержит includes`);
-    }
   }
 
   // Открыть модальное окно предложения источника

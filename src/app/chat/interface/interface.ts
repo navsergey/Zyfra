@@ -57,7 +57,7 @@ export interface SwitchContext{
 export interface QueryRequest {
   context_id: string;
   question: string;
-  active_source: string[];
+  active_sources: string[];
 }
 
 export interface QueryResponse {
