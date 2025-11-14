@@ -59,6 +59,7 @@ export class ChatComponent {
   healthStatus: string = 'unknown'; // Статус здоровья системы
   selectedVersion: string = 'ZIOT_DOCS_220'; // По умолчанию ЗИОТ 2.20
   showOfferSourceModal: boolean = false; // Показать модальное окно предложения источника
+  filterSearch: string[] = []; // Массив includes из выбранной версии
 
   constructor() {
     this.loadContexts();
@@ -69,6 +70,12 @@ export class ChatComponent {
   private loadContexts(): void {
     this.chatService.getContexts().subscribe( val => {
       this.contexts = val;
+    });
+
+    this.chatService.getFilterRules().subscribe( val => {
+      this.filters = val;
+      // Инициализируем filterSearch значением по умолчанию (ZIOT_DOCS_220)
+      this.updateFilterSearch();
     });
   }
 
@@ -292,7 +299,7 @@ export class ChatComponent {
       let accumulatedText = '';
       let firstTokenReceived = false;
 
-      this.chatService.QuestStreamContext(messageText, requestContextId, [this.selectedVersion])
+      this.chatService.QuestStreamContext(messageText, requestContextId, this.filterSearch)
         .pipe(
           tap(() => {
             // Устанавливаем флаг сразу после отправки запроса
@@ -408,7 +415,7 @@ export class ChatComponent {
               let accumulatedText = '';
               let firstTokenReceived = false;
 
-              this.chatService.QuestStreamContext(messageText, requestContextId, [this.selectedVersion])
+              this.chatService.QuestStreamContext(messageText, requestContextId, this.filterSearch)
                 .subscribe({
                   next: (event: StreamEvent) => {
                     // Проверяем, что пользователь всё ещё находится в том же контексте
@@ -561,6 +568,28 @@ export class ChatComponent {
       }
       return [...messages];
     });
+  }
+
+  // Обработчик изменения выбора версии ЗИОТ
+  onVersionChange(): void {
+    this.updateFilterSearch();
+  }
+
+// Обновление filterSearch на основе выбранной версии
+  private updateFilterSearch(): void {
+    if (!this.filters || !this.filters.filter_rules || !this.filters.filter_rules.button_rules) {
+      this.filterSearch = [];
+      return;
+    }
+
+    const buttonRule = this.filters.filter_rules.button_rules[this.selectedVersion];
+    if (buttonRule && buttonRule.includes) {
+      this.filterSearch = [...buttonRule.includes];
+      console.log(`Версия ${this.selectedVersion} выбрана. filterSearch:`, this.filterSearch);
+    } else {
+      this.filterSearch = [];
+      console.warn(`Правило для ${this.selectedVersion} не найдено или не содержит includes`);
+    }
   }
 
   private scrollToBottom(): void {
