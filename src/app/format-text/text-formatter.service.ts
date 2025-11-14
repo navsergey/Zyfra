@@ -49,7 +49,7 @@ export class TextFormatterService {
     // Удаляем текст, начинающийся с "[Документ" или "Источники:" до конца
     const documentIndex = text.indexOf('[Документ');
     const sourcesIndex = text.indexOf('Источники:');
-    
+
     // Находим минимальный индекс (самый ранний маркер)
     const indices = [documentIndex, sourcesIndex].filter(index => index !== -1);
     if (indices.length > 0) {
@@ -79,7 +79,7 @@ export class TextFormatterService {
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
-      
+
       if (line.includes('Например:')) {
         inExampleSection = true;
         formattedText += line + '<br>';
@@ -110,5 +110,29 @@ export class TextFormatterService {
       }
       return pages.map((p: number) => p + ' c.').join(', ');
     }
-    
+
+    removeExtension(filename: string): string {
+      if (!filename) {
+        return '';
+      }
+
+      const parts = filename.split('.');
+      if (parts.length > 1) {
+        parts.pop(); // удаляем последнюю часть (расширение)
+        return parts.join('.');
+      }
+      return filename;
+    }
+
+    shortenFileName(filename: string): string {
+      const baseName = this.removeExtension(filename);
+      if (!baseName) {
+        return '';
+      }
+      if (baseName.length > 12) {
+        return baseName.slice(0, 12) + '..';
+      }
+      return baseName;
+    }
+
 }

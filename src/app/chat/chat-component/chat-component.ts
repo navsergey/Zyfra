@@ -186,17 +186,14 @@ export class ChatComponent {
             ts: turn.ts,
           });
 
-          // Добавляем ответ ассистента с turn_index и sources
-          // Фильтруем источники, оставляя только те, у которых есть pages
-          const sourcesWithPages = turn.sources?.filter(source => source.pages && source.pages.length > 0) || [];
-
+          // Добавляем ответ ассистента с turn_index и sources (без фильтрации по pages)
           messages.push({
             sender: 'assistant',
             text: turn.a,
             ts: turn.ts,
             turn_index: index, // Индекс в массиве turns
             context_id: contextId,
-            sources: sourcesWithPages.length > 0 ? sourcesWithPages : undefined,
+            sources: turn.sources && turn.sources.length > 0 ? turn.sources : undefined,
             feedback_type: turn.feedback_type
           });
         });
@@ -516,15 +513,12 @@ export class ChatComponent {
   }
 
   appendMessage(sender: 'user' | 'assistant', text: string, ts: number, sources?: Source[]): void {
-    // Фильтруем источники, оставляя только те, у которых есть pages
-    const sourcesWithPages = sources?.filter(source => source.pages && source.pages.length > 0);
-
     // Обновляем signal с новым сообщением
     this.chatHistory.update(messages => [...messages, {
       sender: sender,
       text: text,
       ts: ts,
-      sources: sourcesWithPages && sourcesWithPages.length > 0 ? sourcesWithPages : undefined
+      sources: sources && sources.length > 0 ? sources : undefined
     }]);
 
     // Автоматическая прокрутка вниз (только если включен автоскролл)
@@ -562,12 +556,10 @@ export class ChatComponent {
 
   // Финализация последнего сообщения (добавление источников, context_id и turn_index)
   private finalizeLastAssistantMessage(sources: Source[], contextId: string): void {
-    const sourcesWithPages = sources?.filter(source => source.pages && source.pages.length > 0);
-
     this.chatHistory.update(messages => {
       const lastMessage = messages[messages.length - 1];
       if (lastMessage?.sender === 'assistant') {
-        lastMessage.sources = sourcesWithPages && sourcesWithPages.length > 0 ? sourcesWithPages : undefined;
+        lastMessage.sources = sources && sources.length > 0 ? sources : undefined;
         lastMessage.context_id = contextId;
 
         // Вычисляем turn_index: это количество ответов ассистента в истории минус 1 (текущее сообщение)
@@ -619,6 +611,14 @@ export class ChatComponent {
 
   formatPages(text: number[]): string {
     return this.textFormatter.formatPages(text);
+  }
+
+  removeExtension(filename: string): string {
+    return this.textFormatter.removeExtension(filename);
+  }
+
+  shortenFileName(filename: string): string {
+    return this.textFormatter.shortenFileName(filename);
   }
 
   // Проверяет, есть ли активный запрос для данного контекста
