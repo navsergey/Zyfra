@@ -108,7 +108,7 @@ export class ChatService {
     );
   }
 
-  QuestContext(question: string, contextId: string, active_sources: string[], web_search_active:boolean): Observable<QueryResponse> {
+  QuestContext(question: string, contextId: string, active_sources: string[], web_search_active:boolean, session_id:string): Observable<QueryResponse> {
     const headers = this.getAuthHeaders();
 
     // Создаем объект запроса с правильным интерфейсом
@@ -116,7 +116,8 @@ export class ChatService {
       context_id: contextId,
       question: question,
       active_sources: active_sources,
-      web_search_active:web_search_active
+      web_search_active:web_search_active,
+      session_id: session_id,
     };
 
     return this.http.post<QueryResponse>(`${this.baseApiUrl}query`, request, { headers }).pipe(
@@ -141,7 +142,7 @@ export class ChatService {
   }
 
 
-  QuestStreamContext(question: string, contextId: string, active_sources: string[],web_search_active:boolean): Observable<StreamEvent> {
+  QuestStreamContext(question: string, contextId: string, active_sources: string[],web_search_active:boolean, session_id:string): Observable<StreamEvent> {
     const token = this.authService.getToken();
 
     // Создаем объект запроса с правильным интерфейсом
@@ -149,7 +150,8 @@ export class ChatService {
       context_id: contextId,
       question: question,
       active_sources: active_sources,
-      web_search_active: web_search_active
+      web_search_active: web_search_active,
+      session_id: session_id,
     };
 
     return new Observable<StreamEvent>((observer: Observer<StreamEvent>) => {

@@ -58,7 +58,8 @@ export interface QueryRequest {
   context_id: string;
   question: string;
   active_sources: string[];
-  web_search_active?: boolean
+  web_search_active?: boolean;
+  session_id?: string;
 }
 
 export interface QueryResponse {
@@ -107,8 +108,14 @@ export interface ErrorEvent extends BaseStreamEvent {
   error_code?: string;
 }
 
+// Сообщение с session_id для переподключения
+export interface SessionIdEvent extends BaseStreamEvent {
+  type: 'session_id';
+  session_id: string;
+}
+
 // Union Type для всех событий потока
-export type StreamEvent = StatusEvent | TokenEvent | AnswerEvent | DoneEvent | ErrorEvent;
+export type StreamEvent = StatusEvent | TokenEvent | AnswerEvent | DoneEvent | ErrorEvent | SessionIdEvent;
 
 // Type guards для безопасной работы с событиями
 export function isStatusEvent(event: BaseStreamEvent): event is StatusEvent {
@@ -129,6 +136,10 @@ export function isDoneEvent(event: BaseStreamEvent): event is DoneEvent {
 
 export function isErrorEvent(event: BaseStreamEvent): event is ErrorEvent {
   return event.type === 'error';
+}
+
+export function isSessionIdEvent(event: BaseStreamEvent): event is SessionIdEvent {
+  return event.type === 'session_id';
 }
 
 

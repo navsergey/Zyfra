@@ -12,7 +12,8 @@ import {
   isAnswerEvent,
   isDoneEvent,
   isStatusEvent,
-  isErrorEvent
+  isErrorEvent,
+  isSessionIdEvent
 } from '../interface/interface';
 import {SidebarComponent} from '../sidebar-component/sidebar-component';
 import {ChatService} from '../../services/chat-service';
@@ -61,11 +62,18 @@ export class ChatComponent {
   showOfferSourceModal: boolean = false; // Показать модальное окно предложения источника
   filterSearch: string[] = []; // Массив includes из выбранной версии
   webSearchActive: boolean = false;
+  currentSessionId = '';
+  
+  // Переменные для переподключения при перезагрузке страницы
+  private reconnectSessionId: string | null = null;
+  private reconnectQuestion: string | null = null;
+  private reconnectContextId: string | null = null;
 
   constructor() {
     this.loadContexts();
     this.checkHealth();
     this.setupScrollHandler();
+    this.checkForReconnectSession();
   }
 
   private loadContexts(): void {
@@ -103,6 +111,58 @@ export class ChatComponent {
   private handleScroll(container: HTMLElement): void {
     // При любом ручном скролле пользователя отключаем автоскролл
     this.autoScrollEnabled = false;
+  }
+
+  private checkForReconnectSession(): void {
+    // Проверяем наличие сохраненной сессии в localStorage
+    const savedSessionId = localStorage.getItem('reconnectSessionId');
+    const savedQuestion = localStorage.getItem('reconnectQuestion');
+    const savedContextId = localStorage.getItem('reconnectContextId');
+
+    if (savedSessionId && savedQuestion && savedContextId) {
+      console.log('[RECONNECT] Found saved session:', savedSessionId);
+      this.reconnectSessionId = savedSessionId;
+      this.reconnectQuestion = savedQuestion;
+      this.reconnectContextId = savedContextId;
+
+      // Автоматически переподключаемся через небольшую задержку для загрузки UI
+      setTimeout(() => {
+        console.log('[RECONNECT] Auto-reconnecting to session');
+        this.reconnectToSession();
+      }, 1000);
+    }
+  }
+
+  private reconnectToSession(): void {
+    if (!this.reconnectSessionId || !this.reconnectQuestion || !this.reconnectContextId) {
+      return;
+    }
+
+    console.log('[RECONNECT] Reconnecting to session:', this.reconnectSessionId);
+    
+    // Переключаемся на сохраненный контекст
+    this.selectedContextId = this.reconnectContextId;
+    this.onContextSelected(this.reconnectContextId);
+    
+    
+    // Восстанавливаем вопрос и отправляем запрос с session_id для продолжения
+    this.currentSessionId = this.reconnectSessionId;
+    this.submitMessage(this.reconnectQuestion);
+  }
+
+  private clearReconnectSession(): void {
+    // Очищаем данные сессии из localStorage
+    localStorage.removeItem('reconnectSessionId');
+    localStorage.removeItem('reconnectQuestion');
+    localStorage.removeItem('reconnectContextId');
+    
+    // Очищаем локальные переменные
+    this.reconnectSessionId = null;
+    this.reconnectQuestion = null;
+    this.reconnectContextId = null;
+    this.currentSessionId = '';
+    
+    console.log('[RECONNECT] Session cleared');
   }
 
   onContextSelected(contextId: string): void {
@@ -296,11 +356,19 @@ export class ChatComponent {
         localStorage.setItem(`${requestContextId}`, messageText);
       }
 
+      // Сохраняем состояние для возможности переподключения при перезагрузке страницы
+      // (только если это не переподключение к существующей сессии)
+      if (!this.currentSessionId) {
+        localStorage.setItem('reconnectQuestion', messageText);
+        localStorage.setItem('reconnectContextId', requestContextId);
+        console.log('[RECONNECT] Saved state for potential reconnection');
+      }
+
       // Переменная для накопления текста при потоковом получении
       let accumulatedText = '';
       let firstTokenReceived = false;
 
-      this.chatService.QuestStreamContext(messageText, requestContextId, this.filterSearch, this.webSearchActive)
+      this.chatService.QuestStreamContext(messageText, requestContextId, this.filterSearch, this.webSearchActive, this.currentSessionId)
         .pipe(
           tap(() => {
             // Устанавливаем флаг сразу после отправки запроса
@@ -350,10 +418,18 @@ export class ChatComponent {
               // Разблокируем кнопку только при полном завершении ответа
               this.pendingRequestContextIds.delete(requestContextId);
               this.isRequestPending = this.pendingRequestContextIds.size > 0;
+              // Очищаем сессию после успешного завершения
+              this.clearReconnectSession();
 
             } else if (isStatusEvent(event)) {
               // Статусное сообщение
               console.log('Status:', event.message);
+
+            } else if (isSessionIdEvent(event)) {
+              // Получили session_id для возможности переподключения
+              this.currentSessionId = event.session_id;
+              localStorage.setItem('reconnectSessionId', event.session_id);
+              console.log('[SESSION] Received session_id:', event.session_id);
 
             }
           },
@@ -368,6 +444,8 @@ export class ChatComponent {
             this.loadingIndicatorContextIds.delete(requestContextId);
             this.pendingRequestContextIds.delete(requestContextId);
             this.isRequestPending = this.pendingRequestContextIds.size > 0;
+            // Очищаем сессию при ошибке
+            this.clearReconnectSession();
           },
           complete: () => {
             // На случай если firstTokenReceived не сработал (например, только done без токенов)
@@ -412,11 +490,19 @@ export class ChatComponent {
               // Сохраняем сообщение в localStorage перед отправкой запроса
               localStorage.setItem(`${requestContextId}`, messageText);
 
+              // Сохраняем состояние для возможности переподключения при перезагрузке страницы
+              // (только если это не переподключение к существующей сессии)
+              if (!this.currentSessionId) {
+                localStorage.setItem('reconnectQuestion', messageText);
+                localStorage.setItem('reconnectContextId', requestContextId);
+                console.log('[RECONNECT] Saved state for potential reconnection (new context)');
+              }
+
               // Переменная для накопления текста при потоковом получении
               let accumulatedText = '';
               let firstTokenReceived = false;
 
-              this.chatService.QuestStreamContext(messageText, requestContextId, this.filterSearch, this.webSearchActive)
+              this.chatService.QuestStreamContext(messageText, requestContextId, this.filterSearch, this.webSearchActive, this.currentSessionId)
                 .subscribe({
                   next: (event: StreamEvent) => {
                     // Проверяем, что пользователь всё ещё находится в том же контексте
@@ -460,10 +546,18 @@ export class ChatComponent {
                       // Разблокируем кнопку только при полном завершении ответа
                       this.pendingRequestContextIds.delete(requestContextId);
                       this.isRequestPending = this.pendingRequestContextIds.size > 0;
+                      // Очищаем сессию после успешного завершения
+                      this.clearReconnectSession();
 
                     } else if (isStatusEvent(event)) {
                       // Статусное сообщение
                       console.log('Status:', event.message);
+
+                    } else if (isSessionIdEvent(event)) {
+                      // Получили session_id для возможности переподключения
+                      this.currentSessionId = event.session_id;
+                      localStorage.setItem('reconnectSessionId', event.session_id);
+                      console.log('[SESSION] Received session_id (new context):', event.session_id);
 
                     }
                   },
@@ -478,6 +572,8 @@ export class ChatComponent {
                     this.loadingIndicatorContextIds.delete(requestContextId);
                     this.pendingRequestContextIds.delete(requestContextId);
                     this.isRequestPending = this.pendingRequestContextIds.size > 0;
+                    // Очищаем сессию при ошибке
+                    this.clearReconnectSession();
                   },
                   complete: () => {
                     // На случай если firstTokenReceived не сработал (например, только done без токенов)
@@ -496,6 +592,8 @@ export class ChatComponent {
               this.loadingIndicatorContextIds.delete(newContextId); // Удаляем анимацию загрузки
               this.pendingRequestContextIds.delete(newContextId); // Удаляем контекст из списка активных запросов
               this.isRequestPending = this.pendingRequestContextIds.size > 0;
+              // Очищаем сессию при ошибке
+              this.clearReconnectSession();
             }
           });
         },
@@ -508,6 +606,8 @@ export class ChatComponent {
             this.pendingRequestContextIds.delete(newContextId); // Удаляем контекст из списка активных запросов
           }
           this.isRequestPending = this.pendingRequestContextIds.size > 0;
+          // Очищаем сессию при ошибке
+          this.clearReconnectSession();
         }
       });
     }
