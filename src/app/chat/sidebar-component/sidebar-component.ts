@@ -13,9 +13,11 @@ export class SidebarComponent {
   @Input() contexts!: Context[]; // В компонент передаются данные и далее формируется шаблон HTML
   @Input() selectedContextId: string = ''; // ID выбранного контекста
   @Input() pendingRequestContextIds!: Set<string>; // Set контекстов с активными запросами
+  @Input() showWelcome: boolean = false;
+  @Input() isRequestPending: boolean = false;
   @Output() contextSelected = new EventEmitter<string>(); // Событие выбора контекста
   @Output() contextDeleted = new EventEmitter<string>(); // Событие удаления контекста
-  @Output() homeRequested = new EventEmitter<void>(); // Событие перехода на главную
+  @Output() newChat = new EventEmitter<void>(); // Событие удаления контекста
 
 
   createNewChat(): void {
@@ -24,12 +26,7 @@ export class SidebarComponent {
       console.log('Уже существует пустой контекст');
       return;
     }
-    this.contextSelected.emit(''); // Сбрасываем выбранный контекст
-  }
-
-  goToHome(): void {
-    // Переход на главную страницу (показать welcome экран)
-    this.homeRequested.emit();
+    this.newChat.emit(); // Сбрасываем выбранный контекст
   }
 
   selectContext(context: Context): void {

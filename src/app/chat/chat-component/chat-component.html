@@ -4,9 +4,11 @@
       [contexts]="contexts"
       [selectedContextId]="selectedContextId"
       [pendingRequestContextIds]="pendingRequestContextIds"
+      [showWelcome]="showWelcome"
+      [isRequestPending]="isRequestPending"
       (contextSelected)="onContextSelected($event)"
       (contextDeleted)="onContextDeleted($event)"
-      (homeRequested)="onHomeRequested()">
+      (newChat)="onNewChat()">
     </app-sidebar-component>
     <!-- Правая область -->
     <main class="chat-area">
@@ -32,6 +34,11 @@
                         <div class="prompt-icon">🌐</div>
                         <div class="prompt-label">Платформа ZIIoT</div>
                         <div class="prompt-description">Расскажи о платформе ZIIoT</div>
+                    </div>
+                    <div class="prompt-card prompt-card-clickable" (click)="submitMessage('Как настроить алерты в системе?')">
+                      <div class="prompt-icon">🌐</div>
+                      <div class="prompt-label">1</div>
+                      <div class="prompt-description">1</div>
                     </div>
                     <div class="prompt-card prompt-card-clickable" (click)="submitMessage('Что такое Цифра. Конструктор MES')">
                         <div class="prompt-icon">🧩</div>
@@ -129,7 +136,7 @@
             </div>
         </div>
 
-        <div class="input-container">
+        <div class="input-container" *ngIf="!showWelcome">
             <div class="input-box-wrapper">
                 <button class="web-search-btn"
                         [class.active]="webSearchActive"
@@ -152,10 +159,9 @@
                     [(ngModel)]="selectedVersion"
                     (change)="onVersionChange()"
                     [disabled]="hasActiveRequest(selectedContextId)">
-                    <option value="ZIOT_DOCS_217">ЗИОТ 2.17</option>
-                    <option value="ZIOT_DOCS_218">ЗИОТ 2.18</option>
-                    <option value="ZIOT_DOCS_219">ЗИОТ 2.19</option>
-                    <option value="ZIOT_DOCS_220">ЗИОТ 2.20</option>
+                    <option *ngFor="let option of versionOptions" [value]="option.key">
+                        {{ option.displayName }}
+                    </option>
                 </select>
                 <button class="btn-send"
                         (click)="submitMessage()"

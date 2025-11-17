@@ -54,16 +54,16 @@ export class ChatComponent {
   isRequestPending: boolean = false;
   pendingRequestContextIds = new Set<string>(); // Set контекстов, для которых выполняются запросы
   loadingIndicatorContextIds = new Set<string>(); // Set контекстов, для которых показывается анимация загрузки
-  userTextFlag: boolean = false;
   autoScrollEnabled: boolean = true; // Флаг для управления автоматической прокруткой
   scrollHandler: ((event: Event) => void) | null = null; // Ссылка на обработчик скролла
   healthStatus: string = 'unknown'; // Статус здоровья системы
   selectedVersion: string = 'ZIOT_DOCS_220'; // По умолчанию ЗИОТ 2.20
+  versionOptions: { key: string; displayName: string }[] = [];
   showOfferSourceModal: boolean = false; // Показать модальное окно предложения источника
   filterSearch: string[] = []; // Массив includes из выбранной версии
   webSearchActive: boolean = false;
   currentSessionId = '';
-  
+
   // Переменные для переподключения при перезагрузке страницы
   private reconnectSessionId: string | null = null;
   private reconnectQuestion: string | null = null;
@@ -139,12 +139,12 @@ export class ChatComponent {
     }
 
     console.log('[RECONNECT] Reconnecting to session:', this.reconnectSessionId);
-    
+
     // Переключаемся на сохраненный контекст
     this.selectedContextId = this.reconnectContextId;
     this.onContextSelected(this.reconnectContextId);
-    
-    
+
+
     // Восстанавливаем вопрос и отправляем запрос с session_id для продолжения
     this.currentSessionId = this.reconnectSessionId;
     this.submitMessage(this.reconnectQuestion);
@@ -155,13 +155,13 @@ export class ChatComponent {
     localStorage.removeItem('reconnectSessionId');
     localStorage.removeItem('reconnectQuestion');
     localStorage.removeItem('reconnectContextId');
-    
+
     // Очищаем локальные переменные
     this.reconnectSessionId = null;
     this.reconnectQuestion = null;
     this.reconnectContextId = null;
     this.currentSessionId = '';
-    
+
     console.log('[RECONNECT] Session cleared');
   }
 
@@ -221,7 +221,7 @@ export class ChatComponent {
     });
   }
 
-  onHomeRequested(): void {
+  onNewChat(): void {
     // Переход на главную страницу - показываем welcome экран
     this.showWelcome = true;
     this.chatHistory.set([]);
@@ -352,10 +352,6 @@ export class ChatComponent {
       this.loadingIndicatorContextIds.add(requestContextId); // Добавляем контекст для показа анимации загрузки
       this.scrollToBottom(); // Прокручиваем к индикатору загрузки
 
-      if (!this.userTextFlag) {
-        localStorage.setItem(`${requestContextId}`, messageText);
-      }
-
       // Сохраняем состояние для возможности переподключения при перезагрузке страницы
       // (только если это не переподключение к существующей сессии)
       if (!this.currentSessionId) {
@@ -369,12 +365,6 @@ export class ChatComponent {
       let firstTokenReceived = false;
 
       this.chatService.QuestStreamContext(messageText, requestContextId, this.filterSearch, this.webSearchActive, this.currentSessionId)
-        .pipe(
-          tap(() => {
-            // Устанавливаем флаг сразу после отправки запроса
-            this.userTextFlag = true;
-          })
-        )
         .subscribe({
           next: (event: StreamEvent) => {
             // Проверяем, что пользователь всё ещё находится в том же контексте
@@ -453,7 +443,6 @@ export class ChatComponent {
             this.pendingRequestContextIds.delete(requestContextId);
             this.isRequestPending = this.pendingRequestContextIds.size > 0;
             this.loadContexts();
-            this.userTextFlag = false;
             localStorage.removeItem(requestContextId);
           }
         });
@@ -680,10 +669,24 @@ export class ChatComponent {
   private updateFilterSearch(): void {
     if (!this.filters || !this.filters.filter_rules || !this.filters.filter_rules.button_rules) {
       this.filterSearch = [];
+      this.versionOptions = [];
       return;
     }
 
-    const buttonRule = this.filters.filter_rules.button_rules[this.selectedVersion];
+    const buttonRules = this.filters.filter_rules.button_rules;
+
+    this.versionOptions = Object.entries(buttonRules)
+      .filter(([key]) => key.startsWith('ZIOT_DOCS_'))
+      .map(([key, rule]) => ({
+        key,
+        displayName: (rule.display_name || '').replace('Документация', '').trim()
+      }));
+
+    if (!this.selectedVersion || !buttonRules[this.selectedVersion]) {
+      this.selectedVersion = this.versionOptions.length > 0 ? this.versionOptions[0].key : '';
+    }
+
+    const buttonRule = buttonRules[this.selectedVersion];
     if (buttonRule && buttonRule.includes) {
       this.filterSearch = [...buttonRule.includes];
       console.log(`Версия ${this.selectedVersion} выбрана. filterSearch:`, this.filterSearch);
@@ -767,20 +770,37 @@ export class ChatComponent {
 
     const currentFeedbackType = currentMessage?.feedback_type;
 
-    // Если уже есть feedback, сначала удаляем его
-    if (currentFeedbackType && currentFeedbackType !== '' && currentFeedbackType !== feedback_type) {
-      let deleteFeedbackType: string;
+    // Если кликнули на уже активный feedback - убираем его
+    if (currentFeedbackType === feedback_type) {
+      const deleteFeedbackType = feedback_type === 'like' ? 'delete_like' : 'delete_dislike';
+      console.log(`Отмена feedback: ${deleteFeedbackType}`);
 
-      if (currentFeedbackType === 'like') {
-        deleteFeedbackType = 'delete_like';
-      } else if (currentFeedbackType === 'dislike') {
-        deleteFeedbackType = 'delete_dislike';
-      } else {
-        // Если текущий тип неизвестен, просто устанавливаем новый
-        this.setFeedback(contextId, turn_index, feedback_type);
-        return;
-      }
+      this.chatService.Feedback(contextId, turn_index, deleteFeedbackType).subscribe({
+        next: (response) => {
+          console.log('Feedback успешно отменен:', response);
 
+          // Убираем feedback_type из локального состояния
+          this.chatHistory.update(messages => {
+            return messages.map(message => {
+              if (message.sender === 'assistant' &&
+                  message.context_id === contextId &&
+                  message.turn_index === turn_index) {
+                return { ...message, feedback_type: '' };
+              }
+              return message;
+            });
+          });
+        },
+        error: (error) => {
+          console.error('Ошибка при отмене feedback:', error);
+        }
+      });
+      return;
+    }
+
+    // Если уже есть другой feedback, сначала удаляем его
+    if (currentFeedbackType && currentFeedbackType !== '') {
+      const deleteFeedbackType = currentFeedbackType === 'like' ? 'delete_like' : 'delete_dislike';
       console.log(`Удаление существующего feedback: ${deleteFeedbackType}`);
 
       // Сначала удаляем существующий feedback
@@ -796,7 +816,7 @@ export class ChatComponent {
         }
       });
     } else {
-      // Если feedback пустой или такой же, просто устанавливаем новый
+      // Если feedback пустой, просто устанавливаем новый
       this.setFeedback(contextId, turn_index, feedback_type);
     }
   }

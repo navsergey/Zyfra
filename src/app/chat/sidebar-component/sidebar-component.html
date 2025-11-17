@@ -1,6 +1,6 @@
 <aside class="sidebar">
   <div class="brand">
-    <div class="brand-logo" (click)="goToHome()" style="cursor: pointer;">
+    <div class="brand-logo">
       <div class="logo-symbol"></div>
       <span class="brand-name">Цифра GPT</span>
     </div>
@@ -10,7 +10,7 @@
   <div class="action-buttons">
     <button class="btn-new-chat"
             (click)="createNewChat()"
-            [disabled]="hasEmptyContext()">
+            [disabled]="hasEmptyContext() || showWelcome || isRequestPending">
       Новый диалог
     </button>
   </div>
