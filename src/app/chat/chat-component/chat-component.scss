@@ -510,6 +510,30 @@
     line-height: 1.5;
 }
 
+/* Специальные карточки с измененным цветом */
+.prompt-card-special {
+    background: rgba(61, 158, 164, 0.15);
+    border: 1px solid rgba(61, 158, 164, 0.25);
+}
+
+.prompt-card-special::before {
+    background: #3D9E9A;
+}
+
+.prompt-card-special:hover {
+    background: rgba(61, 158, 164, 0.3);
+    border-color: #3D9E9A;
+    box-shadow: 0 12px 28px rgba(61, 158, 164, 0.25);
+}
+
+.prompt-card-special .prompt-label {
+    color: #E8F4F8;
+}
+
+.prompt-card-special .prompt-description {
+    color: #A8C5C9;
+}
+
 /* Область ввода */
 .input-container {
     padding: 30px 40px;
