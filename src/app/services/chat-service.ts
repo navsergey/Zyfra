@@ -108,7 +108,7 @@ export class ChatService {
     );
   }
 
-  QuestContext(question: string, contextId: string, active_sources: string[], web_search_active:boolean, session_id:string): Observable<QueryResponse> {
+  QuestContext(question: string, contextId: string, active_sources: string[], web_search_active:boolean, session_id:string, context_label:string): Observable<QueryResponse> {
     const headers = this.getAuthHeaders();
 
     // Создаем объект запроса с правильным интерфейсом
@@ -118,6 +118,7 @@ export class ChatService {
       active_sources: active_sources,
       web_search_active:web_search_active,
       session_id: session_id,
+      context_label: context_label,
     };
 
     return this.http.post<QueryResponse>(`${this.baseApiUrl}query`, request, { headers }).pipe(
@@ -142,7 +143,7 @@ export class ChatService {
   }
 
 
-  QuestStreamContext(question: string, contextId: string, active_sources: string[],web_search_active:boolean, session_id:string): Observable<StreamEvent> {
+  QuestStreamContext(question: string, contextId: string, active_sources: string[],web_search_active:boolean, session_id:string, context_label: string): Observable<StreamEvent> {
     const token = this.authService.getToken();
 
     // Создаем объект запроса с правильным интерфейсом
@@ -152,6 +153,7 @@ export class ChatService {
       active_sources: active_sources,
       web_search_active: web_search_active,
       session_id: session_id,
+      context_label: context_label,
     };
 
     return new Observable<StreamEvent>((observer: Observer<StreamEvent>) => {
@@ -288,7 +290,8 @@ export class ChatService {
           last_activity: '',
           turn_count: 0,
           is_active: false,
-          turns: []
+          turns: [],
+          context_label: '',
         });
       })
     );

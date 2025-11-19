@@ -33,7 +33,8 @@ export interface TurnResponse {
   last_activity: string;
   turn_count: number;
   is_active: boolean
-  turns: AddProp[]
+  turns: AddProp[];
+  context_label: string;
 }
 
 export interface Source {
@@ -60,6 +61,7 @@ export interface QueryRequest {
   active_sources: string[];
   web_search_active?: boolean;
   session_id?: string;
+  context_label: string;
 }
 
 export interface QueryResponse {

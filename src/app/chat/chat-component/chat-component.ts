@@ -63,6 +63,7 @@ export class ChatComponent {
   filterSearch: string[] = []; // Массив includes из выбранной версии
   webSearchActive: boolean = false;
   currentSessionId = '';
+  currentSource = '';
 
   // Переменные для переподключения при перезагрузке страницы
   private reconnectSessionId: string | null = null;
@@ -233,6 +234,12 @@ export class ChatComponent {
 
   private loadDialog(contextId: string): void {
     this.chatService.getTurn(contextId).subscribe(response => {
+      this.currentSource = response.context_label
+      console.log(response.context_label)
+      // Устанавливаем версию в зависимости от context_label
+      if (this.currentSource) {
+        this.setVersionBySource(this.currentSource);
+      }
       this.currentDialog = response;
       this.showWelcome = false;
 
@@ -318,9 +325,16 @@ export class ChatComponent {
 
 
 
-  submitMessage(promptText?: string): void {
+  submitMessage(promptText?: string, source?: string): void {
     const messageText = promptText ? promptText.trim() : this.userInput.trim();
     if (!messageText) return;
+
+    // Устанавливаем currentSource и selectedVersion, если передан параметр source
+    if (source) {
+      console.log(source)
+      this.currentSource = source;
+      this.setVersionBySource(source);
+    }
 
     // Проверяем, нет ли уже активного запроса для текущего контекста
     if (this.selectedContextId && this.hasActiveRequest(this.selectedContextId)) {
@@ -364,7 +378,7 @@ export class ChatComponent {
       let accumulatedText = '';
       let firstTokenReceived = false;
 
-      this.chatService.QuestStreamContext(messageText, requestContextId, this.filterSearch, this.webSearchActive, this.currentSessionId)
+      this.chatService.QuestStreamContext(messageText, requestContextId, this.filterSearch, this.webSearchActive, this.currentSessionId, this.currentSource)
         .subscribe({
           next: (event: StreamEvent) => {
             // Проверяем, что пользователь всё ещё находится в том же контексте
@@ -491,7 +505,7 @@ export class ChatComponent {
               let accumulatedText = '';
               let firstTokenReceived = false;
 
-              this.chatService.QuestStreamContext(messageText, requestContextId, this.filterSearch, this.webSearchActive, this.currentSessionId)
+              this.chatService.QuestStreamContext(messageText, requestContextId, this.filterSearch, this.webSearchActive, this.currentSessionId, this.currentSource)
                 .subscribe({
                   next: (event: StreamEvent) => {
                     // Проверяем, что пользователь всё ещё находится в том же контексте
@@ -682,8 +696,21 @@ export class ChatComponent {
         displayName: (rule.display_name || '').replace('Документация', '').trim()
       }));
 
+    // Устанавливаем версию в зависимости от currentSource
     if (!this.selectedVersion || !buttonRules[this.selectedVersion]) {
-      this.selectedVersion = this.versionOptions.length > 0 ? this.versionOptions[0].key : '';
+      // Если есть currentSource, используем маппинг
+      if (this.currentSource) {
+        const sourceToVersionMap: { [key: string]: string } = {
+          'ziiot': 'ZIOT_DOCS_220',
+          'ziak': 'ZIAK_DOCS_LATEST',
+          'projectmgmt': 'PROJECT_MGMT',
+          'autobp': 'AUTOBP_KB'
+        };
+        this.selectedVersion = sourceToVersionMap[this.currentSource] || 'ZIOT_DOCS_220';
+      } else {
+        // По умолчанию ZIOT_DOCS_220
+        this.selectedVersion = 'ZIOT_DOCS_220';
+      }
     }
 
     const buttonRule = buttonRules[this.selectedVersion];
@@ -693,6 +720,25 @@ export class ChatComponent {
     } else {
       this.filterSearch = [];
       console.warn(`Правило для ${this.selectedVersion} не найдено или не содержит includes`);
+    }
+  }
+
+  // Установка версии в зависимости от источника (context_label)
+  private setVersionBySource(source: string): void {
+    const sourceToVersionMap: { [key: string]: string } = {
+      'ziiot': 'ZIOT_DOCS_220',
+      'ziak': 'ZIAK_DOCS_LATEST',
+      'projectmgmt': 'PROJECT_MGMT',
+      'autobp': 'AUTOBP_KB'
+    };
+
+    const newVersion = sourceToVersionMap[source];
+    if (newVersion) {
+      this.selectedVersion = newVersion;
+      this.updateFilterSearch();
+      console.log(`Версия установлена по источнику "${source}": ${this.selectedVersion}`);
+    } else {
+      console.warn(`Неизвестный источник: ${source}`);
     }
   }
 

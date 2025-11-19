@@ -30,27 +30,22 @@
                     Помогаю с цифровизацией производства, анализом данных и автоматизацией процессов.
                 </p>
                 <div class="prompts-grid">
-                    <div class="prompt-card prompt-card-clickable" (click)="submitMessage('Расскажи о платформе ZIIoT')">
+                    <div class="prompt-card prompt-card-clickable" (click)="submitMessage('Расскажи о платформе ZIIoT', 'ziiot')">
                         <div class="prompt-icon">🌐</div>
                         <div class="prompt-label">Платформа ZIIoT</div>
                         <div class="prompt-description">Расскажи о платформе ZIIoT</div>
                     </div>
-                    <div class="prompt-card prompt-card-clickable" (click)="submitMessage('Как настроить алерты в системе?')">
-                      <div class="prompt-icon">🌐</div>
-                      <div class="prompt-label">1</div>
-                      <div class="prompt-description">1</div>
-                    </div>
-                    <div class="prompt-card prompt-card-clickable" (click)="submitMessage('Что такое Цифра. Конструктор MES')">
+                    <div class="prompt-card prompt-card-clickable" (click)="submitMessage('Расскажи кратко о ZIAK ', 'ziak')">
                         <div class="prompt-icon">🧩</div>
                         <div class="prompt-label">Цифра. Конструктор MES</div>
                         <div class="prompt-description">Что такое Цифра. Конструктор MES</div>
                     </div>
-                    <div class="prompt-card prompt-card-clickable" (click)="submitMessage('Планировании и контроль проектных задач')">
+                    <div class="prompt-card prompt-card-clickable" (click)="submitMessage('У меня вопрос к помощнику по поиску по базе знаний управления проектами', 'projectmgmt')">
                       <div class="prompt-icon">📋</div>
                       <div class="prompt-label">Управление проектами</div>
                       <div class="prompt-description">Планировании и контроль проектных задач</div>
                     </div>
-                    <div class="prompt-card prompt-card-clickable" (click)="submitMessage('Внедрение автоматизации в бизнес-процессы')">
+                    <div class="prompt-card prompt-card-clickable" (click)="submitMessage('У меня вопрос к помощнику по поиску по базе знаний автоматизации бизнес-процессов', 'autobp')">
                       <div class="prompt-icon">🤖</div>
                       <div class="prompt-label">Автоматизация бизнес процессов</div>
                       <div class="prompt-description">Внедрение автоматизации в бизнес-процессы</div>
@@ -60,7 +55,7 @@
                         <div class="prompt-label">Предложить источник</div>
                         <div class="prompt-description">Предложить источник по нужной теме</div>
                     </div>
-                    <div class="prompt-card prompt-card-special">
+                    <div class="prompt-card prompt-card-special" (click)="submitMessage('Как обратиться в поддержку?', 'ziiot')">
                         <div class="prompt-icon">🛠️</div>
                         <div class="prompt-label">Техническая поддержка</div>
                         <div class="prompt-description">Связаться с технической поддержкой</div>
@@ -155,6 +150,7 @@
                     (input)="adjustHeight($event)"
                     [disabled]="hasActiveRequest(selectedContextId)"></textarea>
                 <select
+                    *ngIf="currentSource === 'ziiot' || currentSource === ''"
                     class="version-select"
                     [(ngModel)]="selectedVersion"
                     (change)="onVersionChange()"
