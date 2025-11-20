@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: support-rag-frontend-service
+  namespace: dev
+  labels:
+    app: support-rag-frontend
+spec:
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: http
+  selector:
+    app: support-rag-frontend
+  sessionAffinity: None
+  type: ClusterIP

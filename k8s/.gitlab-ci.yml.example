@@ -1,0 +1,64 @@
+# Пример GitLab CI/CD для автоматического развертывания
+
+stages:
+  - build
+  - deploy
+
+variables:
+  DOCKER_IMAGE: zyfrabotfront
+  DOCKER_TAG: $CI_COMMIT_SHORT_SHA
+  KUBE_NAMESPACE: dev
+
+build:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -f Dockerfile -t $CI_REGISTRY_IMAGE:$DOCKER_TAG .
+    - docker tag $CI_REGISTRY_IMAGE:$DOCKER_TAG $CI_REGISTRY_IMAGE:latest
+    - docker push $CI_REGISTRY_IMAGE:$DOCKER_TAG
+    - docker push $CI_REGISTRY_IMAGE:latest
+  only:
+    - main
+    - develop
+
+deploy-dev:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  before_script:
+    - kubectl config set-cluster k8s --server="$KUBE_URL" --insecure-skip-tls-verify=true
+    - kubectl config set-credentials gitlab --token="$KUBE_TOKEN"
+    - kubectl config set-context default --cluster=k8s --user=gitlab --namespace=$KUBE_NAMESPACE
+    - kubectl config use-context default
+  script:
+    - kubectl apply -k k8s/
+    - kubectl set image deployment/zyfra-frontend -n $KUBE_NAMESPACE zyfra-frontend=$CI_REGISTRY_IMAGE:$DOCKER_TAG
+    - kubectl rollout status deployment/zyfra-frontend -n $KUBE_NAMESPACE
+  environment:
+    name: development
+    url: http://zyfra.dev.local
+  only:
+    - develop
+
+deploy-production:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  before_script:
+    - kubectl config set-cluster k8s --server="$KUBE_URL" --insecure-skip-tls-verify=true
+    - kubectl config set-credentials gitlab --token="$KUBE_TOKEN"
+    - kubectl config set-context default --cluster=k8s --user=gitlab --namespace=production
+    - kubectl config use-context default
+  script:
+    - kubectl apply -k k8s/
+    - kubectl set image deployment/zyfra-frontend -n production zyfra-frontend=$CI_REGISTRY_IMAGE:$DOCKER_TAG
+    - kubectl rollout status deployment/zyfra-frontend -n production
+  environment:
+    name: production
+    url: https://zyfra.example.com
+  when: manual
+  only:
+    - main
+

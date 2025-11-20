@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  support-rag-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zyfra-app
+    ports:
+      - "4200:80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    networks:
+      - zyfra-network
+
+networks:
+  zyfra-network:
+    driver: bridge
+
