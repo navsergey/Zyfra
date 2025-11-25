@@ -443,7 +443,7 @@ export class ChatComponent {
               return;
             }
             console.error('Ошибка при отправке вопроса:', error);
-            this.appendMessage('assistant', 'Извините, произошла ошибка при обработке вашего вопроса.', Date.now());
+            this.appendMessage('assistant', 'Упс, ничего не нашлось в базе знаний, предложи источник.', Date.now());
             // Убираем индикатор загрузки и разблокируем кнопку при ошибке
             this.loadingIndicatorContextIds.delete(requestContextId);
             this.pendingRequestContextIds.delete(requestContextId);
@@ -570,7 +570,7 @@ export class ChatComponent {
                       return;
                     }
                     console.error('Ошибка при отправке вопроса:', error);
-                    this.appendMessage('assistant', 'Извините, произошла ошибка при обработке вашего вопроса.', Date.now());
+                    this.appendMessage('assistant', 'Упс, ничего не нашлось в базе знаний, предложи источник.', Date.now());
                     // Убираем индикатор загрузки и разблокируем кнопку при ошибке
                     this.loadingIndicatorContextIds.delete(requestContextId);
                     this.pendingRequestContextIds.delete(requestContextId);

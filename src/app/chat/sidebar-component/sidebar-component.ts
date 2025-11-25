@@ -1,5 +1,6 @@
-import {Component, Input, Output, EventEmitter} from '@angular/core';
+import {Component, Input, Output, EventEmitter, inject} from '@angular/core';
 import {Context} from '../interface/interface';
+import {TextFormatterService} from '../../format-text/text-formatter.service';
 
 @Component({
   selector: 'app-sidebar-component',
@@ -18,6 +19,8 @@ export class SidebarComponent {
   @Output() contextSelected = new EventEmitter<string>(); // Событие выбора контекста
   @Output() contextDeleted = new EventEmitter<string>(); // Событие удаления контекста
   @Output() newChat = new EventEmitter<void>(); // Событие удаления контекста
+
+  textFormatter = inject(TextFormatterService);
 
 
   createNewChat(): void {
@@ -49,6 +52,22 @@ export class SidebarComponent {
       context.turn_count === 0 &&
       !this.pendingRequestContextIds?.has(context.context_id)
     );
+  }
+
+  formatLastActivity(lastActivity: string): string {
+    if (!lastActivity) return '';
+
+    const date = new Date(lastActivity);
+    if (!isNaN(date.getTime())) {
+      return this.textFormatter.formatTimestamp(date.getTime());
+    }
+
+    const asNumber = Number(lastActivity);
+    if (!isNaN(asNumber)) {
+      return this.textFormatter.formatTimestamp(asNumber);
+    }
+
+    return lastActivity;
   }
 
 }

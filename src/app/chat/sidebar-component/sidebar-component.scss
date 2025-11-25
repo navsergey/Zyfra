@@ -166,6 +166,38 @@
   white-space: nowrap;
 }
 
+.history-item-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.history-item-time {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #8497B0;
+  opacity: 0.9;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+  font-variant-numeric: tabular-nums; // Моноширинные цифры для лучшего выравнивания
+  
+  // SVG иконка часов перед временем
+  &::before {
+    content: '';
+    width: 11px;
+    height: 11px;
+    flex-shrink: 0;
+    opacity: 0.6;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238497B0' stroke-width='2.5' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+    transition: all 0.2s ease;
+  }
+}
+
 .delete-btn {
   background: none;
   border: none;
@@ -218,6 +250,16 @@
   border-left-color: #80bc48;
   color: #F5F8FA;
   padding-left: 18px;
+  
+  .history-item-time {
+    color: #8FB47E;
+    opacity: 1;
+    
+    &::before {
+      opacity: 1;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238FB47E' stroke-width='2.5' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E");
+    }
+  }
 }
 
 .history-item.active {
@@ -225,6 +267,18 @@
   border-left-color: #80bc48;
   color: #80bc48;
   font-weight: bold;
+}
+
+.history-item.active .history-item-time {
+  color: #A0C588;
+  font-weight: 500;
+  opacity: 1;
+  
+  &::before {
+    opacity: 1;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23A0C588' stroke-width='2.5' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E");
+    filter: brightness(1.1);
+  }
 }
 
 /* Footer */
