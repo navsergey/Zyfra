@@ -52,10 +52,10 @@ export class TextFormatterService {
     // Также удаляет запятые, пробелы и переносы строк после закрывающей скобки
     const documentPattern = /\[Документ\s+\\?"[^"]*\\?"[^\]]*\][,\s]*|\[Документ[^\]]*\][,\s]*/g;
     text = text.replace(documentPattern, '');
-    
+
     // Очищаем только явные артефакты после удаления блоков документов
     text = text.replace(/,\s*,/g, ',').replace(/^\s*,\s*/, '').replace(/,\s*$/, '').trim();
-    
+
     // Удаляем текст от "Источники:" до конца
     const sourcesIndex = text.indexOf('Источники:');
     if (sourcesIndex !== -1) {

@@ -134,6 +134,7 @@
         <div class="input-container" *ngIf="!showWelcome">
             <div class="input-box-wrapper">
                 <button class="web-search-btn"
+                        *ngIf="currentSource === 'ziiot' || currentSource === 'ziak'"
                         [class.active]="webSearchActive"
                         (click)="toggleWebSearch()"
                         [disabled]="hasActiveRequest(selectedContextId)"

@@ -661,6 +661,7 @@ export class ChatComponent {
   // Финализация последнего сообщения (добавление источников, context_id и turn_index)
   private finalizeLastAssistantMessage(sources: Source[], contextId: string): void {
     this.chatHistory.update(messages => {
+      console.log(sources)
       const lastMessage = messages[messages.length - 1];
       if (lastMessage?.sender === 'assistant') {
         lastMessage.sources = sources && sources.length > 0 ? sources : undefined;
