@@ -14,13 +14,23 @@ import {
 import {Observable, catchError, of, map, throwError, tap, Observer} from 'rxjs';
 import {AuthService} from '../authpage/auth/auth';
 
+// Расширяем интерфейс Window для window.config
+declare global {
+  interface Window {
+    config?: {
+      apiUrl: string;
+    };
+  }
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class ChatService {
   http = inject(HttpClient)
   authService = inject(AuthService)
-  baseApiUrl = 'https://dev.study.dp.zyfra.com/';
+  // Получаем API URL из window.config (загружается из config.js) или используем fallback
+  baseApiUrl = (typeof window !== 'undefined' && window.config?.apiUrl) || 'https://dev.study.dp.zyfra.com/';
 
   private getAuthHeaders(): HttpHeaders {
     // Получаем токен из AuthService используя новый метод

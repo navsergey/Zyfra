@@ -25,9 +25,13 @@ COPY --from=build /app/dist/zyfra1.0/browser /usr/share/nginx/html
 # Копирование кастомной конфигурации nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# Копирование скрипта генерации конфигурации
+COPY generate-config.sh /docker-entrypoint.d/40-generate-config.sh
+RUN chmod +x /docker-entrypoint.d/40-generate-config.sh
+
 # Открытие порта 80
 EXPOSE 80
 
-# Запуск nginx
+# Запуск nginx (скрипт выполнится автоматически через docker-entrypoint.d)
 CMD ["nginx", "-g", "daemon off;"]
 

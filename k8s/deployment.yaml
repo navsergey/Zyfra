@@ -27,6 +27,12 @@ spec:
       containers:
       - name: support-rag-frontend
         image: certificationbot.study.dp.zyfra.com/support-rag-frontend:1.0
+        env:
+          - name: API_URL
+            valueFrom:
+              configMapKeyRef:
+                name: support-rag-frontend-configmap
+                key: API_URL
         imagePullPolicy: Always
         ports:
         - name: http

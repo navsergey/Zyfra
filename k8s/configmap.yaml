@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: support-rag-frontend-configmap
+  namespace: dev
+  labels:
+    app: support-rag-frontend
+data:
+  API_URL: "https://dev.study.dp.zyfra.com/"
