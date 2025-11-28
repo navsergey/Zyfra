@@ -6,4 +6,4 @@ metadata:
   labels:
     app: support-rag-frontend
 data:
-  API_URL: "https://dev.study.dp.zyfra.com/"
+  API_URL: "https://zyfragpt.study.dp.zyfra.com/

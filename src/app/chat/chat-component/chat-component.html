@@ -13,7 +13,7 @@
     <!-- Правая область -->
     <main class="chat-area">
         <header class="top-bar">
-            <h1 class="chat-title">Ассистент <span>Цифры</span></h1>
+            <h1 class="chat-title">Ассистент</h1>
             <div class="status-indicator">
                 <div class="status-dot" [class.healthy]="healthStatus === 'healthy'" [class.unhealthy]="healthStatus !== 'healthy'"></div>
                 <span>{{ healthStatus === 'healthy' ? 'Онлайн' : 'Оффлайн' }}</span>
@@ -24,7 +24,7 @@
             <!-- Приветственный экран -->
             <div class="welcome-container" id="welcomeView" *ngIf="showWelcome">
                 <div class="welcome-graphic"></div>
-                <h2 class="welcome-heading">Добро пожаловать в <span class="highlight">Цифра GPT</span></h2>
+                <h2 class="welcome-heading">Добро пожаловать в <span class="highlight">Мой GPT</span></h2>
                 <p class="welcome-description">
                     Интеллектуальный ассистент для индустриального сектора.
                     Помогаю с цифровизацией производства, анализом данных и автоматизацией процессов.
@@ -32,13 +32,13 @@
                 <div class="prompts-grid">
                     <div class="prompt-card prompt-card-clickable" (click)="submitMessage('У меня вопрос по платформе ZIIoT', 'ziiot')">
                         <div class="prompt-icon">🌐</div>
-                        <div class="prompt-label">Платформа ZIIoT</div>
-                        <div class="prompt-description">Расскажи о платформе ZIIoT</div>
+                        <div class="prompt-label">Продукт - 1</div>
+                        <div class="prompt-description">Расскажи о Продукт - 1</div>
                     </div>
                     <div class="prompt-card prompt-card-clickable" (click)="submitMessage('Расскажи про продукт Цифра. Конструктор MES', 'ziak')">
                         <div class="prompt-icon">🧩</div>
-                        <div class="prompt-label">Цифра. Конструктор MES</div>
-                        <div class="prompt-description">Что такое Цифра. Конструктор MES</div>
+                        <div class="prompt-label">Продукт - 2</div>
+                        <div class="prompt-description">Что такое Продукт - 2</div>
                     </div>
                     <div class="prompt-card prompt-card-clickable" (click)="submitMessage('У меня вопрос к помощнику по поиску по базе знаний управления проектами', 'projectmgmt')">
                       <div class="prompt-icon">📋</div>

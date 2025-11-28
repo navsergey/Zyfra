@@ -694,7 +694,7 @@ export class ChatComponent {
       .filter(([key]) => key.startsWith('ZIOT_DOCS_'))
       .map(([key, rule]) => ({
         key,
-        displayName: (rule.display_name || '').replace('Документация', '').trim()
+        displayName: (rule.display_name || '').replace('Документация ZIIoT', 'Версия').trim()
       }));
 
     // Устанавливаем версию в зависимости от currentSource
