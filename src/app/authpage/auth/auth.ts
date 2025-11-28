@@ -10,7 +10,8 @@ import {TokenResponse} from './auth.interface';
 export class AuthService {
   http = inject(HttpClient)
   cookieService = inject(CookieService) //Для вытягивания token из куков
-  baseApiUrl = 'https://dev.study.dp.zyfra.com/';
+  // Получаем API URL из window.config (загружается из config.js) или используем fallback
+  baseApiUrl = (typeof window !== 'undefined' && window.config?.apiUrl) || 'https://zyfragpt.study.dp.zyfra.com/';
 
   token: string | null = null;
   refreshtoken: string | null = null;
