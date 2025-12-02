@@ -19,6 +19,7 @@ declare global {
   interface Window {
     config?: {
       apiUrl: string;
+      baseHref?: string;
     };
   }
 }

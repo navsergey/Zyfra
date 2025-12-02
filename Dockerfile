@@ -4,6 +4,12 @@ FROM node:20-alpine AS build
 # Установка рабочей директории
 WORKDIR /app
 
+# Build argument для base-href (по умолчанию /ui)
+# ВАЖНО: При сборке образа передавайте --build-arg BASE_HREF=<значение>, 
+# если оно отличается от дефолтного /ui. Значение должно совпадать с BASE_HREF в ConfigMap.
+# Пример: docker build --build-arg BASE_HREF=/custom-path -t image:tag .
+ARG BASE_HREF=/ui
+
 # Копирование package.json и package-lock.json
 COPY package*.json ./
 
@@ -13,8 +19,9 @@ RUN npm ci --legacy-peer-deps
 # Копирование всех файлов проекта
 COPY . .
 
-# Сборка приложения для production с base-href /ui/
-RUN npm run build -- --configuration production --base-href /ui/
+# Сборка приложения для production с base-href из build arg
+# Значение будет использовано при сборке, а затем может быть изменено через generate-config.sh
+RUN npm run build -- --configuration production --base-href ${BASE_HREF}/
 
 # Stage 2: Serve app with Nginx
 FROM nginx:alpine

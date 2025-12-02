@@ -193,6 +193,7 @@ export class ChatComponent {
 
     // Переключение на существующий контекст
     this.chatService.switchContexts(contextId).subscribe();
+    this.webSearchActive = false;
     this.selectedContextId = contextId;
     // Включаем автоскролл при переключении контекста, чтобы показать актуальные сообщения
     this.autoScrollEnabled = true;

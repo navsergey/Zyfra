@@ -26,13 +26,18 @@ spec:
           - name: regcred
       containers:
       - name: support-rag-frontend
-        image: certificationbot.study.dp.zyfra.com/support-rag-frontend:1.1
+        image: certificationbot.study.dp.zyfra.com/support-rag-frontend:1.2
         env:
           - name: API_URL
             valueFrom:
               configMapKeyRef:
                 name: support-rag-frontend-configmap
                 key: API_URL
+          - name: BASE_HREF
+            valueFrom:
+              configMapKeyRef:
+                name: support-rag-frontend-configmap
+                key: BASE_HREF
         imagePullPolicy: Always
         ports:
         - name: http

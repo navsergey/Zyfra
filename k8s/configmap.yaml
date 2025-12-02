@@ -7,3 +7,4 @@ metadata:
     app: support-rag-frontend
 data:
   API_URL: "https://zyfragpt.study.dp.zyfra.com/"
+  BASE_HREF: "/ui"
