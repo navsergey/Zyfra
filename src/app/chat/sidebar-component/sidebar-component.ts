@@ -59,6 +59,7 @@ export class SidebarComponent {
 
     const date = new Date(lastActivity);
     if (!isNaN(date.getTime())) {
+      console.log(date)
       return this.textFormatter.formatTimestamp(date.getTime());
     }
 
