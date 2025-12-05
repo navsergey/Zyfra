@@ -167,6 +167,9 @@ export class ChatComponent {
   }
 
   onContextSelected(contextId: string): void {
+    // Сбрасываем содержимое и высоту поля ввода
+    this.resetTextarea();
+    
     // Если пустой ID — создаем новый контекст, обновляем историю и переключаемся на него
     if (!contextId) {
       this.chatService.createContext().subscribe({
@@ -212,6 +215,8 @@ export class ChatComponent {
           this.showWelcome = true;
           this.currentDialog = null;
           this.selectedContextId = '';
+          // Сбрасываем содержимое и высоту поля ввода
+          this.resetTextarea();
         }
 
         // Обновляем список контекстов (ререндер history-section)
@@ -309,8 +314,32 @@ export class ChatComponent {
 
   adjustHeight(event: Event): void {
     const elem = event.target as HTMLTextAreaElement;
+    const maxHeight = 180; // Максимальная высота из CSS
+    
     elem.style.height = 'auto';
-    elem.style.height = elem.scrollHeight + 'px';
+    const newHeight = elem.scrollHeight;
+    
+    if (newHeight > maxHeight) {
+      // Текст не помещается - показываем скролл и устанавливаем максимальную высоту
+      elem.style.height = maxHeight + 'px';
+      elem.style.overflowY = 'auto';
+    } else {
+      // Текст помещается - скрываем скролл и устанавливаем нужную высоту
+      elem.style.height = newHeight + 'px';
+      elem.style.overflowY = 'hidden';
+    }
+  }
+
+  // Вспомогательный метод для сброса textarea (содержимое и высота)
+  private resetTextarea(): void {
+    this.userInput = '';
+    setTimeout(() => {
+      const textarea = document.getElementById('userInput') as HTMLTextAreaElement;
+      if (textarea) {
+        textarea.style.height = 'auto';
+        textarea.style.overflowY = 'hidden'; // Скрываем скролл при сбросе
+      }
+    }, 0);
   }
 
   checkEnter(event: KeyboardEvent): void {
@@ -348,15 +377,7 @@ export class ChatComponent {
 
     // Используйте строку для временной метки
     this.appendMessage('user', messageText, 0);
-    this.userInput = '';
-
-    // Сброс высоты textarea
-    setTimeout(() => {
-      const textarea = document.getElementById('userInput') as HTMLTextAreaElement;
-      if (textarea) {
-        textarea.style.height = 'auto';
-      }
-    }, 0);
+    this.resetTextarea();
 
     if (this.selectedContextId) {
       // Сохраняем contextId в момент отправки запроса
