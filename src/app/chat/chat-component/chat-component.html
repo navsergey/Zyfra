@@ -26,42 +26,44 @@
                 <div class="welcome-graphic"></div>
                 <h2 class="welcome-heading">Добро пожаловать в <span class="highlight">Цифра GPT</span></h2>
                 <p class="welcome-description">
-                  Интеллектуальный ассистент для сотрудников Цифры для быстрого поиска ответов по внутренним базам знаний!.
-                  Проект развивается на энтузиазме сотрудников Учебного центра Цифры при поддержке Технического директора ГК Цифра.
-                  Это альфа версия бота, она может давать не точные ответы, содержать баги и недоработки интерфейса. Обратную связь вы можете оставить через кнопку вызова ТП. Также можете предложить новый источник для пополнения базы знаний бота.
+                  Интеллектуальный ассистент для сотрудников Цифры для быстрого поиска ответов по внутренним базам знаний!
                 </p>
                 <div class="prompts-grid">
                     <div class="prompt-card prompt-card-clickable" (click)="submitMessage('У меня вопрос по платформе ZIIoT', 'ziiot')">
-                        <img src="/mes-icon.svg" alt="MES" class="prompt-icon">
+                        <img src="mes-icon.svg" alt="MES" class="prompt-icon">
                         <div class="prompt-label">Платформа ZIIoT</div>
                         <div class="prompt-description">В этой ветке бот отвечает на вопросы по платформе ZIIoT. В ответах используется продуктовая документация (у нее приоритет) и базы знаний в Confluence</div>
                     </div>
                     <div class="prompt-card prompt-card-clickable" (click) = "submitMessage('Расскажи про продукт Цифра. Конструктор MES', 'ziak')" >
-                        <img src="/puzzle-piece-icon.svg" alt="ZIAK" class="prompt-icon">
+                        <img src="puzzle-piece-icon.svg" alt="ZIAK" class="prompt-icon">
                         <div class="prompt-label">Цифра. Конструктор MES (ZIAK)</div>
                         <div class="prompt-description">В этой ветке бот отвечает на вопросы по конструктору MES (рекомендуем в вопросах использовать аббревиатуру ZIAK). В ответах используется продуктовая документация и базы знаний в Confluence</div>
                     </div >
                     <div class="prompt-card prompt-card-clickable" (click) = "submitMessage('У меня вопрос к помощнику по поиску по базе знаний управления проектами', 'projectmgmt')" >
-                        <img src="/project-management-icon.svg" alt="Управление проектами" class="prompt-icon">
+                        <img src="project-management-icon.svg" alt="Управление проектами" class="prompt-icon">
                         <div class="prompt-label">Управление проектами НП</div>
                         <div class="prompt-description">В этой ветке бот отвечает на вопросы по базе знаний управления проектами дивизиона НП в Confluence</div>
                     </div >
                     <div class="prompt-card prompt-card-clickable" (click) = "submitMessage('У меня вопрос к помощнику по поиску по базе знаний автоматизации бизнес-процессов', 'autobp')" >
-                        <img src="/business-process-automation-icon.svg" alt="Автоматизация БП" class="prompt-icon">
+                        <img src="business-process-automation-icon.svg" alt="Автоматизация БП" class="prompt-icon">
                         <div class="prompt-label">Автоматизация бизнес процессов</div>
                         <div class="prompt-description">В этой ветке бот отвечает на вопросы по базе знаний "Автоматизация БП" в Confluence. Здесь можно задать вопрос по внутренним процессам и регламентам ГК Цифра</div>
                     </div >
                     <div class="prompt-card prompt-card-clickable prompt-card-special" (click) = "openOfferSourceModal()" >
-                        <img src="/light-bulb-icon.svg" alt="Предложить источник" class="prompt-icon">
+                        <img src="light-bulb-icon.svg" alt="Предложить источник" class="prompt-icon">
                         <div class="prompt-label">Предложить источник</div>
                         <div class="prompt-description">Если бот не дал ответ на Ваш вопрос, но вы знаете, где он содержится (Confluence, Nextcloud, Битрикс и т.д.) - пришлите нам ссылку и мы подключим ее к боту! Перед загрузкой в бота все материалы обезличиваются и чистятся от чувствительной информации.</div>
                     </div >
                     <div class="prompt-card prompt-card-special" (click) = "submitMessage('Как написать в поддержку', 'ziiot')" >
-                        <img src="/tools-icon.svg" alt="Техническая поддержка" class="prompt-icon">
+                        <img src="tools-icon.svg" alt="Техническая поддержка" class="prompt-icon">
                         <div class="prompt-label">Техническая поддержка</div>
                         <div class="prompt-description">Связаться с технической поддержкой</div>
                     </div >
                 </div >
+              <p class="welcome-description welcome-description-bottom">
+                Проект развивается на энтузиазме сотрудников Учебного центра Цифры при поддержке Технического директора ГК Цифра.
+                Это альфа версия бота, она может давать не точные ответы, содержать баги и недоработки интерфейса. Обратную связь вы можете оставить через кнопку вызова ТП. Также можете предложить новый источник для пополнения базы знаний бота.
+              </p>
             </div>
 
             <!-- Сообщения чата -->
@@ -145,7 +147,7 @@
                 <textarea
                     class="text-input"
                     id="userInput"
-                    placeholder="Задайте вопрос"
+                    placeholder="Задайте вопрос (Смена темы? Начните новый чат! Текущая история диалога влияет на контекст ответа. С новым диалогом ответ будет точнее)"
                     rows="1"
                     [(ngModel)]="userInput"
                     (keydown)="checkEnter($event)"

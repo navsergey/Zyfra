@@ -441,6 +441,10 @@
     text-align: center;
 }
 
+.welcome-description-bottom{
+  margin-top: 25px;
+}
+
 .prompts-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -642,7 +646,7 @@
     border-radius: 14px;
     padding: 16px 24px;
     color: #F5F8FA;
-    font-size: 14.5px;
+    font-size: 13px;
     font-family: Tahoma, Arial, sans-serif;
     resize: none;
     max-height: 180px;
