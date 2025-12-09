@@ -54,7 +54,7 @@
                         <div class="prompt-label">Предложить источник</div>
                         <div class="prompt-description">Если бот не дал ответ на Ваш вопрос, но вы знаете, где он содержится (Confluence, Nextcloud, Битрикс и т.д.) - пришлите нам ссылку и мы подключим ее к боту! Перед загрузкой в бота все материалы обезличиваются и чистятся от чувствительной информации.</div>
                     </div >
-                    <div class="prompt-card prompt-card-special" (click) = "submitMessage('Как написать в поддержку', 'ziiot')" >
+                    <div class="prompt-card prompt-card-special" (click) = "submitMessage('Как написать в поддержку', 'techsup')" >
                         <img src="tools-icon.svg" alt="Техническая поддержка" class="prompt-icon">
                         <div class="prompt-label">Техническая поддержка</div>
                         <div class="prompt-description">Связаться с технической поддержкой</div>
@@ -165,7 +165,7 @@
                 </select>
                 <button class="btn-send"
                         (click)="submitMessage()"
-                        [disabled]="hasActiveRequest(selectedContextId)">
+                        [disabled]="hasActiveRequest(selectedContextId) || currentSource === 'techsup'">
                     <svg class="send-svg" viewBox="0 0 24 24">
                         <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
                     </svg>

@@ -57,7 +57,7 @@ export class ChatComponent {
   autoScrollEnabled: boolean = true; // Флаг для управления автоматической прокруткой
   scrollHandler: ((event: Event) => void) | null = null; // Ссылка на обработчик скролла
   healthStatus: string = 'unknown'; // Статус здоровья системы
-  selectedVersion: string = 'ZIOT_DOCS_220'; // По умолчанию ЗИОТ 2.20
+  selectedVersion: string = 'ZIOT_DOCS_221'; // По умолчанию ЗИОТ 2.21
   versionOptions: { key: string; displayName: string }[] = [];
   showOfferSourceModal: boolean = false; // Показать модальное окно предложения источника
   filterSearch: string[] = []; // Массив includes из выбранной версии
@@ -84,7 +84,7 @@ export class ChatComponent {
 
     this.chatService.getFilterRules().subscribe( val => {
       this.filters = val;
-      // Инициализируем filterSearch значением по умолчанию (ZIOT_DOCS_220)
+      // Инициализируем filterSearch значением по умолчанию (ZIOT_DOCS_221)
       this.updateFilterSearch();
     });
   }
@@ -720,20 +720,9 @@ export class ChatComponent {
       }));
 
     // Устанавливаем версию в зависимости от currentSource
+    // UI отображает только ZIOT_DOCS_* версии, поэтому используем дефолт для всех источников
     if (!this.selectedVersion || !buttonRules[this.selectedVersion]) {
-      // Если есть currentSource, используем маппинг
-      if (this.currentSource) {
-        const sourceToVersionMap: { [key: string]: string } = {
-          'ziiot': 'ZIOT_DOCS_220',
-          'ziak': 'ZIAK_DOCS_LATEST',
-          'projectmgmt': 'PROJECT_MGMT',
-          'autobp': 'AUTOBP_KB'
-        };
-        this.selectedVersion = sourceToVersionMap[this.currentSource] || 'ZIOT_DOCS_220';
-      } else {
-        // По умолчанию ZIOT_DOCS_220
-        this.selectedVersion = 'ZIOT_DOCS_220';
-      }
+      this.selectedVersion = 'ZIOT_DOCS_221';
     }
 
     const buttonRule = buttonRules[this.selectedVersion];
@@ -749,7 +738,7 @@ export class ChatComponent {
   // Установка версии в зависимости от источника (context_label)
   private setVersionBySource(source: string): void {
     const sourceToVersionMap: { [key: string]: string } = {
-      'ziiot': 'ZIOT_DOCS_220',
+      'ziiot': 'ZIOT_DOCS_221',
       'ziak': 'ZIAK_DOCS_LATEST',
       'projectmgmt': 'PROJECT_MGMT',
       'autobp': 'AUTOBP_KB'

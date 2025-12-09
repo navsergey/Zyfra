@@ -25,7 +25,12 @@
                (click)="selectContext(context)">
             <div class="history-item-content">
               <span class="history-item-title">{{ context.title }}</span>
-              <span class="history-item-time">{{ formatLastActivity(context.last_activity) }}</span>
+              <div class="history-item-meta">
+                @if (getContextLabel(context.context_label)) {
+                  <span class="context-label">{{ getContextLabel(context.context_label) }}</span>
+                }
+                <span class="history-item-time">{{ formatLastActivity(context.last_activity) }}</span>
+              </div>
             </div>
             <button class="delete-btn"
                     (click)="deleteContext($event, context.context_id)"

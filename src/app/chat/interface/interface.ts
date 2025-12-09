@@ -14,7 +14,8 @@ export interface Context {
   created_at: string;
   last_activity: string;
   turn_count: number;
-  is_active: boolean
+  is_active: boolean;
+  context_label: string;
 }
 
 export interface ContextsResponse {

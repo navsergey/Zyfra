@@ -70,4 +70,16 @@ export class SidebarComponent {
     return lastActivity;
   }
 
+  // Получить метку источника по context_label
+  getContextLabel(contextLabel: string): string {
+    const labelMap: { [key: string]: string } = {
+      'ziiot': 'ZIIOT',
+      'ziak': 'ZIAK',
+      'projectmgmt': 'Проекты',
+      'autobp': 'БП',
+      'techsup': 'Support'
+    };
+    return labelMap[contextLabel] || '';
+  }
+
 }
