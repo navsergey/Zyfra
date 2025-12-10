@@ -169,7 +169,7 @@ export class ChatComponent {
   onContextSelected(contextId: string): void {
     // Сбрасываем содержимое и высоту поля ввода
     this.resetTextarea();
-    
+
     // Если пустой ID — создаем новый контекст, обновляем историю и переключаемся на него
     if (!contextId) {
       this.chatService.createContext().subscribe({
@@ -315,10 +315,10 @@ export class ChatComponent {
   adjustHeight(event: Event): void {
     const elem = event.target as HTMLTextAreaElement;
     const maxHeight = 180; // Максимальная высота из CSS
-    
+
     elem.style.height = 'auto';
     const newHeight = elem.scrollHeight;
-    
+
     if (newHeight > maxHeight) {
       // Текст не помещается - показываем скролл и устанавливаем максимальную высоту
       elem.style.height = maxHeight + 'px';
@@ -345,6 +345,12 @@ export class ChatComponent {
   checkEnter(event: KeyboardEvent): void {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
+      
+      // Для techsup не отправляем сообщение при Enter
+      if (this.currentSource === 'techsup') {
+        return;
+      }
+      
       // Не отправляем, если для текущего контекста уже выполняется запрос
       if (this.selectedContextId && this.hasActiveRequest(this.selectedContextId)) {
         return;
